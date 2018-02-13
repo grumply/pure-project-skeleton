@@ -91,4 +91,4 @@ How it works
 ---
 
 See
-[project-development.md](https://github.com/grumply/pure-platform/blob/develop/docs/project-development.md).
+[project-development.md](https://github.com/grumply/pure-platform/blob/master/docs/project-development.md).
