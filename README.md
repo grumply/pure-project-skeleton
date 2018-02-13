@@ -48,8 +48,6 @@ of the project with Nix.
 
   $ tree result
   result
-  ├── android
-  │   └── frontend -> /nix/store/{..}-android-app
   ├── ghc
   │   ├── backend -> /nix/store/{..}-backend-0.1.0.0
   │   ├── common -> /nix/store/{..}-common-0.1.0.0
