@@ -17,7 +17,7 @@ cabal-version:       >=1.10
 executable frontend
   main-is:             Main.hs
   ghc-options:         -Wall -O2 -threaded -rtsopts -with-rtsopts=-N
-  extensions:
+  default-extensions:
     AutoDeriveTypeable
     BangPatterns
     BinaryLiterals

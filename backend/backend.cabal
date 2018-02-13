@@ -18,7 +18,7 @@ executable backend
   main-is:             Main.hs
   ghc-options:         -Wall -O2 -threaded -rtsopts -with-rtsopts=-N
   -- other-modules:       
-  extensions:
+  default-extensions:
     AutoDeriveTypeable
     BangPatterns
     BinaryLiterals

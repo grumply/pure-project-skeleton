@@ -17,7 +17,7 @@ cabal-version:       >=1.10
 library
   ghc-options:         -Wall -O2
   exposed-modules:     Lib
-  extensions:
+  default-extensions:
     AutoDeriveTypeable
     BangPatterns
     BinaryLiterals
