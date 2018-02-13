@@ -1,0 +1,4 @@
+[submodule "pure-platform"]
+	path = pure-platform
+	url = git@github.com:grumply/pure-platform
+	branch = master
