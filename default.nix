@@ -1,22 +1,14 @@
 {}:
 
-(import ./pure-platform {}).project ({ pkgs, ... }: {
+(import ./deps/pure-platform {}).project ({ pkgs, ... }: {
+  overrides = self: super: {
+
+  };
+
   packages = {
     common = ./common;
     backend = ./backend;
     frontend = ./frontend;
-  };
-
-  android.frontend = {
-    executableName = "frontend";
-    applicationId = "org.example.frontend";
-    displayName = "Example Android App";
-  };
-
-  ios.frontend = {
-    executableName = "frontend";
-    bundleIdentifier = "org.example.frontend";
-    bundleName = "Example iOS App";
   };
 
   shells = {

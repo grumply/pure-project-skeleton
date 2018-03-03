@@ -16,8 +16,7 @@ cabal-version:       >=1.10
 
 executable backend
   main-is:             Main.hs
-  ghc-options:         -Wall -O2 -threaded -rtsopts -with-rtsopts=-N
-  -- other-modules:       
+  ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   default-extensions:
     AutoDeriveTypeable
     BangPatterns
@@ -58,6 +57,122 @@ executable backend
     ViewPatterns 
   build-depends:       base >=4.9 && <4.11
                      , common
-                     , pure
   hs-source-dirs:      src
   default-language:    Haskell2010
+
+benchmark backend-bench
+  type: exitcode-stdio-1.0
+
+  main-is: Bench.hs
+
+  hs-source-dirs:
+      src bench
+
+  ghc-options: -O2 -rtsopts -with-rtsopts=-T -v0
+
+  build-depends:
+      base >=4.8
+    , trivial
+    , common
+
+  default-extensions:
+    AutoDeriveTypeable
+    BangPatterns
+    BinaryLiterals
+    ConstraintKinds
+    DataKinds
+    DefaultSignatures
+    DeriveDataTypeable
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveTraversable
+    DoAndIfThenElse
+    EmptyDataDecls
+    ExistentialQuantification
+    FlexibleContexts
+    FlexibleInstances
+    FunctionalDependencies
+    GADTs
+    GeneralizedNewtypeDeriving
+    InstanceSigs
+    KindSignatures
+    LambdaCase
+    MultiParamTypeClasses
+    MultiWayIf
+    NamedFieldPuns
+    OverloadedStrings
+    PartialTypeSignatures
+    PatternGuards
+    PolyKinds
+    RankNTypes
+    RecordWildCards
+    ScopedTypeVariables
+    StandaloneDeriving
+    TupleSections
+    TypeFamilies
+    TypeOperators
+    TypeSynonymInstances
+    ViewPatterns 
+
+  other-modules:
+
+  default-language: Haskell2010
+
+test-suite backend-test
+  type: exitcode-stdio-1.0
+
+  main-is: Test.hs
+
+  hs-source-dirs:
+      src test
+
+  build-depends:
+      base >=4.8
+    , trivial
+    , common
+
+  default-extensions:
+    AutoDeriveTypeable
+    BangPatterns
+    BinaryLiterals
+    ConstraintKinds
+    DataKinds
+    DefaultSignatures
+    DeriveDataTypeable
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveTraversable
+    DoAndIfThenElse
+    EmptyDataDecls
+    ExistentialQuantification
+    FlexibleContexts
+    FlexibleInstances
+    FunctionalDependencies
+    GADTs
+    GeneralizedNewtypeDeriving
+    InstanceSigs
+    KindSignatures
+    LambdaCase
+    MultiParamTypeClasses
+    MultiWayIf
+    NamedFieldPuns
+    OverloadedStrings
+    PartialTypeSignatures
+    PatternGuards
+    PolyKinds
+    RankNTypes
+    RecordWildCards
+    ScopedTypeVariables
+    StandaloneDeriving
+    TupleSections
+    TypeFamilies
+    TypeOperators
+    TypeSynonymInstances
+    ViewPatterns 
+
+  other-modules:
+
+  default-language: Haskell2010
+

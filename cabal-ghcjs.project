@@ -1,4 +1,10 @@
 compiler: ghcjs
+profiling: False
+tests: False
+benchmarks: False
+optimization: 0
+documentation: False
+jobs: $ncpus
 packages:
   common/
   frontend/

@@ -1,3 +1,10 @@
+profiling: False
+tests: False
+benchmarks: False
+optimization: 0
+documentation: False
+allow-newer: all
+jobs: $ncpus
 packages:
   common/
   backend/
