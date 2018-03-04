@@ -6,4 +6,5 @@ import Pure.Connection
 import Lib
 
 main :: IO ()
-main = putStrLn "Hello, Haskell!"
+main = putStrLn "Hello, World!"
+

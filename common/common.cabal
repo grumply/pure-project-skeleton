@@ -70,9 +70,9 @@ benchmark common-bench
   ghc-options: -O2 -rtsopts -with-rtsopts=-T -v0
 
   build-depends:
-      base >=4.8
-    , trivial
-    , common
+      base >=4.8,
+      trivial,
+      common
 
   default-extensions:
     AutoDeriveTypeable
@@ -126,12 +126,10 @@ test-suite common-test
   hs-source-dirs:
       src test
 
-  ghc-options: -O2 -rtsopts -with-rtsopts=-T -v0
-
   build-depends:
-      base >=4.8
-    , trivial
-    , common
+      base >=4.8,
+      trivial,
+      common
 
   default-extensions:
     AutoDeriveTypeable

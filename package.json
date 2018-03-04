@@ -1,0 +1,73 @@
+{
+    "name": "pure-project-skeleton",
+    "version": "1.0.0",
+    "description": "Pure client and server development workflow",
+    "main": "index.js",
+    "watch": {
+        "ghc:dev": "{backend/src,backend/test,backend/bench,common/src,common/test,common/bench,frontend/src,frontend/test,frontend/bench}/*.hs",
+        // "dev:ghc:frontend:exe"     : {"patterns": [ "./frontend/src"   ] , "extensions": "hs"},
+        // "dev:ghcjs:frontend:exe"   : {"patterns": [ "./frontend/src"   ] , "extensions": "hs"},
+        // "dev:ghc:frontend:test"    : {"patterns": [ "./frontend/test"  ] , "extensions": "hs"},
+        // "dev:ghcjs:frontend:test"  : {"patterns": [ "./frontend/test"  ] , "extensions": "hs"},
+        // "dev:ghc:frontend:bench"   : {"patterns": [ "./frontend/bench" ] , "extensions": "hs"},
+        // "dev:ghcjs:frontend:bench" : {"patterns": [ "./frontend/bench" ] , "extensions": "hs"},
+        // "dev:ghc:backend:exe"      : {"patterns": [ "./backend/src"    ] , "extensions": "hs"},
+        // "dev:ghc:backend:test"     : {"patterns": [ "./backend/test"   ] , "extensions": "hs"},
+        // "dev:ghc:backend:bench"    : {"patterns": [ "./backend/bench"  ] , "extensions": "hs"},
+        // "dev:ghc:common:lib"       : {"patterns": [ "./common/src"     ] , "extensions": "hs"},
+        // "dev:ghc:common:test"      : {"patterns": [ "./common/test"    ] , "extensions": "hs"},
+        // "dev:ghc:common:bench"     : {"patterns": [ "./common/bench"   ] , "extensions": "hs"}
+    },
+    "scripts": {
+        "init": "git submodule update --init --recursive --remote && npm run ghc-all & npm run ghcjs-all",
+
+        "start": "npm run ghc:dev & npm run ghcjs:dev",
+
+        "dev": "npm-watch",
+        "ghc:dev"   : "npm run ghc:build:all",
+
+        "ghcjs:dev" : "",
+
+        "ghcjs:frontend:exe"   : "./ghcjs cabal new-build frontend --project-file=cabal-ghcjs.project --builddir=dist/ghcjs/frontend/",
+        "ghcjs:frontend:test"  : "./ghcjs cabal new-build frontend:frontend-test --enable-tests --project-file=cabal-ghcjs.project --builddir=dist/ghcjs/frontend-test/",
+        "ghcjs:frontend:bench" : "./ghcjs cabal new-build frontend:frontend-bench --enable-benchmarks --project-file=cabal-ghcjs.project --builddir=dist/ghcjs/frontend-bench/",
+
+        "ghcjs:build:frontend:exe"   : "cabal new-build frontend --project-file=cabal-ghcjs.project --builddir=dist/ghcjs/frontend/",
+        "ghcjs:build:frontend:test"  : "cabal new-build frontend:frontend-test --enable-tests --project-file=cabal-ghcjs.project --builddir=dist/ghcjs/frontend-test/",
+        "ghcjs:build:frontend:bench" : "cabal new-build frontend:frontend-bench --enable-benchmarks --project-file=cabal-ghcjs.project --builddir=dist/ghcjs/frontend-bench/",
+
+        "ghcjs:build:all": "npm run ghcjs:build:frontend:exe & npm run ghcjs:build:frontend:test & npm run ghcjs:build:frontend:bench",
+
+        "ghc:frontend:exe"   : "./ghc cabal new-build frontend --enable-tests --builddir=dist/ghc/frontend/",
+        "ghc:frontend:test"  : "./ghc cabal new-build frontend:frontend-test --enable-tests --builddir=dist/ghc/frontend-test/",
+        "ghc:frontend:bench" : "./ghc cabal new-build frontend:frontend-bench --enable-benchmarks --builddir=dist/ghc/frontend-bench/",
+        "ghc:backend:exe"    : "./ghc cabal new-build backend --builddir=dist/ghc/backend/",
+        "ghc:backend:test"   : "./ghc cabal new-build backend:backend-test --enable-tests --builddir=dist/ghc/backend-test/",
+        "ghc:backend:bench"  : "./ghc cabal new-build backend:backend-bench --enable-benchmarks --builddir=dist/ghc/backend-bench/",
+        "ghc:common:lib"     : "./ghc cabal new-build common --builddir=dist/ghc/common/",
+        "ghc:common:test"    : "./ghc cabal new-build common:common-test --enable-tests --builddir=dist/ghc/common-test/",
+        "ghc:common:bench"   : "./ghc cabal new-build common:common-bench --enable-benchmarks --builddir=dist/ghc/common-bench/",
+
+        "ghc:build:frontend:exe"   : "cabal new-build frontend --builddir=dist/ghc/frontend/",
+        "ghc:build:frontend:test"  : "cabal new-build frontend:frontend-test --enable-tests --builddir=dist/ghc/frontend-test/",
+        "ghc:build:frontend:bench" : "cabal new-build frontend:frontend-bench --enable-benchmarks --builddir=dist/ghc/frontend-bench/",
+        "ghc:build:backend:exe"    : "cabal new-build backend --builddir=dist/ghc/backend/",
+        "ghc:build:backend:test"   : "cabal new-build backend:backend-test --enable-tests --builddir=dist/ghc/backend-test/",
+        "ghc:build:backend:bench"  : "cabal new-build backend:backend-bench --enable-benchmarks --builddir=dist/ghc/backend-bench/",
+        "ghc:build:common:lib"     : "cabal new-build common --builddir=dist/ghc/common/",
+        "ghc:build:common:test"    : "cabal new-build common:common-test --enable-tests --builddir=dist/ghc/common-test/",
+        "ghc:build:common:bench"   : "cabal new-build common:common-bench --enable-benchmarks --builddir=dist/ghc/common-bench/",
+
+        "ghc:build:all": "npm run ghc:build:frontend:exe & npm run ghc:build:frontend:test & npm run ghc:build:frontend:bench & npm run ghc:build:backend:exe & npm run ghc:build:backend:test & npm run ghc:build:backend:bench & npm run ghc:build:common:lib & npm run ghc:build:common:test & npm run ghc:build:common:bench"
+
+
+    },
+    "author": "$author",
+    "email": "$email",
+    "license": "BSD2",
+    "dependencies": {
+        "compression": "^1.7.1",
+        "lite-server": "^2.3.0",
+        "npm-watch": "^0.2.0"
+    }
+}

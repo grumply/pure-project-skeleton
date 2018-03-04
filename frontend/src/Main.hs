@@ -22,4 +22,4 @@ _MyApp = Controller {..}
     build  = return
     prime  = return ()
     model  = Const ()
-    view _ = Div [] "My App"
+    view _ = Div [] "Hello, World!"
