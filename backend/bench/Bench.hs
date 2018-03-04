@@ -7,3 +7,4 @@ main = run suite
 suite = tests
   [
   ]
+
