@@ -4,8 +4,8 @@
     "description": "Pure client and server development workflow",
     "main": "index.js",
     "watch": {
+        "dev:ghc:backend:exe"      : {"patterns": [ "./backend/src"    ] , "extensions": "hs", "quiet": false},
         "dev:ghc:backend:bench"    : {"patterns": [ "./backend/bench"  ] , "extensions": "hs"},
-        "dev:ghc:backend:exe"      : {"patterns": [ "./backend/src"    ] , "extensions": "hs"},
         "dev:ghc:backend:test"     : {"patterns": [ "./backend/test"   ] , "extensions": "hs"},
         "dev:ghc:common:bench"     : {"patterns": [ "./common/bench"   ] , "extensions": "hs"},
         "dev:ghc:common:lib"       : {"patterns": [ "./common/src"     ] , "extensions": "hs"},
@@ -15,8 +15,9 @@
         "dev:ghcjs:frontend:test"  : {"patterns": [ "./frontend/test"  ] , "extensions": "hs"}
     },
     "scripts": {
-        "init": "git submodule update --init --recursive --remote && npm run ghc:build:all & npm run ghcjs:build:all",
-        "start": "npm run server && npm run serve-exe & (sleep 2 && npm run serve-test) & (sleep 4 && npm run serve-bench) & (sleep 6 && npm-watch)",
+        "seed": "git submodule update --init --recursive --remote",
+        "init": "./ghc npm run ghc:build:all & ./ghcjs npm run ghcjs:build:all",
+        "start": "npm run run:server & (sleep 2 && npm run run:serve:exe) & (sleep 4 && npm run run:serve:test) & (sleep 6 && npm run run:serve:bench) & (sleep 8 && npm-watch)",
 
         "delete:indexes"  : "rm dist/ghcjs/*/build/*/ghcjs-0.2.1/*/c/*/noopt/build/*/*.jsexe/index.html || true",
 
@@ -29,13 +30,13 @@
         "run:common:bench": "./dist/ghc/common-bench/build/*/ghc-8.0.2/*/c/common-bench/noopt/build/common-bench/common-bench",
         "run:common:test": "./dist/ghc/common-test/build/*/ghc-8.0.2/*/c/common-test/noopt/build/common-test/common-test",
 
-        "run:server": "./dist/ghc/backend/build/*/ghc-8.0.2/*/c/backend/noopt/build/backend/backend",
+        "run:server": "./dist/ghc/backend/build/*/ghc-8.0.2/*/c/backend/noopt/build/backend/backend --addr :8000",
 
         "run:serve:bench": "lite-server -c bs-config-bench.js",
         "run:serve:exe"  : "lite-server -c bs-config-exe.js",
         "run:serve:test" : "lite-server -c bs-config-test.js",
 
-        "kill:server": "killall -9 backend",
+        "kill:server": "killall -9 backend || true",
 
         "dev:ghcjs:frontend:bench" : "./ghcjs cabal new-build frontend:frontend-bench --enable-benchmarks --project-file=cabal-ghcjs.project --builddir=dist/ghcjs/frontend-bench/ && npm run delete:indexes && npm run distribute:bench",
         "dev:ghcjs:frontend:exe"   : "./ghcjs cabal new-build frontend --project-file=cabal-ghcjs.project --builddir=dist/ghcjs/frontend/ && npm run delete:indexes && npm run distribute:exe",
@@ -53,7 +54,7 @@
         "ghcjs:build:frontend:exe"  : "cabal new-build frontend --project-file=cabal-ghcjs.project --builddir=dist/ghcjs/frontend/",
         "ghcjs:build:frontend:test" : "cabal new-build frontend:frontend-test --enable-tests --project-file=cabal-ghcjs.project --builddir=dist/ghcjs/frontend-test/",
 
-        "ghc:build:all": "npm run ghc:build:frontend:exe & npm run ghc:build:frontend:test & npm run ghc:build:frontend:bench & npm run ghc:build:backend:exe & npm run ghc:build:backend:test & npm run ghc:build:backend:bench & npm run ghc:build:common:lib & npm run ghc:build:common:test & npm run ghc:build:common:bench",
+        "ghc:build:all": "npm run ghc:build:backend:exe & npm run ghc:build:backend:test & npm run ghc:build:backend:bench & npm run ghc:build:common:lib & npm run ghc:build:common:test & npm run ghc:build:common:bench",
         "ghc:build:backend:bench": "cabal new-build backend:backend-bench --enable-benchmarks --builddir=dist/ghc/backend-bench/",
         "ghc:build:backend:exe"  : "cabal new-build backend --builddir=dist/ghc/backend/",
         "ghc:build:backend:test" : "cabal new-build backend:backend-test --enable-tests --builddir=dist/ghc/backend-test/",

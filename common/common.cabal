@@ -36,6 +36,7 @@ library
     FunctionalDependencies
     GADTs
     GeneralizedNewtypeDeriving
+    ImplicitParams
     InstanceSigs
     KindSignatures
     LambdaCase
@@ -45,6 +46,7 @@ library
     OverloadedStrings
     PartialTypeSignatures
     PatternGuards
+    PatternSynonyms
     PolyKinds
     RankNTypes
     RecordWildCards
@@ -52,6 +54,7 @@ library
     StandaloneDeriving
     TupleSections
     TypeFamilies
+    TypeOperators
     TypeSynonymInstances
     ViewPatterns 
   build-depends:       base >=4.9 && <4.11, 

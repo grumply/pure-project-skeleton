@@ -16,7 +16,7 @@ cabal-version:       >=1.10
 
 executable backend
   main-is:             Main.hs
-  ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-extensions:
     AutoDeriveTypeable
     BangPatterns

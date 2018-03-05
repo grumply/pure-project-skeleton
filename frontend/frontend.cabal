@@ -37,6 +37,7 @@ executable frontend
     GADTs
     GeneralizedNewtypeDeriving
     InstanceSigs
+    ImplicitParams
     KindSignatures
     LambdaCase
     MultiParamTypeClasses
@@ -45,6 +46,7 @@ executable frontend
     OverloadedStrings
     PartialTypeSignatures
     PatternGuards
+    PatternSynonyms
     PolyKinds
     RankNTypes
     RecordWildCards
@@ -52,6 +54,7 @@ executable frontend
     StandaloneDeriving
     TupleSections
     TypeFamilies
+    TypeOperators
     TypeSynonymInstances
     ViewPatterns
   build-depends:       base >=4.9 && <4.11,
