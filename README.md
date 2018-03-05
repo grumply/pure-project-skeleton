@@ -102,8 +102,8 @@ local and non-hackage dependency management are also covered.
 Thanks
 ---
 
-Thanks to [Will Fancher](github.com/elvishjerricco) for 
-[reflex-project-skeleton](github.com/elvishjerricco/reflex-project-skeleton) 
+Thanks to [Will Fancher](https://github.com/elvishjerricco) for 
+[reflex-project-skeleton](https://github.com/elvishjerricco/reflex-project-skeleton) 
 which this project is based on.
 
 TODO:
