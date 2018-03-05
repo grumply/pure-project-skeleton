@@ -1,30 +1,51 @@
 Multi-package Pure example
 ---
 
-This repo is an example of combining `cabal.project`, Nix, and
+This repo is an example of combining `cabal.project`, Nix, node, and
 `pure-platform` to improve the developer experience.
+
+First run
+---
 
 Either clone this repo with `--recurse-submodules`, or run `git
 submodule update --init --recursive` in this directory after cloning
-to make sure `pure-platform` is checked out.
+to make sure `pure-platform` is checked out. 
 
-First, run `./pure-platform/try-pure` at least once. We won't use
-it at all in this project, but it does some extra work to setup your
-system requirements automatically, namely installing Nix and
+First, run `./deps/pure-platform/try-pure` at least once. We won't 
+manually use it at all in this project, but it does some extra work to 
+setup your system requirements automatically, namely installing Nix and
 configuring the Pure binary cache.
 
-Once Nix is installed, everything else is mostly handled for you. To
-build the project's backend, use the `./cabal` script:
+Once Nix is installed, everything else is mostly handled for you. To build
+everything for the first time, using node:
 
 ```bash
-$ ./cabal new-build all
+$ npm run init
 ```
 
-To build the GHCJS frontend app, use the `./cabal-ghcjs` script:
+Development
+---
+
+While developing, have the node dev script running to manage re-builds and serve
+the javascript benchmarks, tests, and application.
 
 ```bash
-$ ./cabal-ghcjs new-build all
+$ npm run dev
 ```
+
+Changes to `backend/bench/*` will cause a recompilation of backend:backend-bench
+with GHC followed by automatically running the benchmarks. Similarly for 
+`common/bench/*`. However, changes to `frontend/bench/*` will cause a 
+recompilation of frontend:frontend-bench with GHCJS followed by reloading the 
+browser tab running the benchmarks. The same applies for tests.
+
+Changes to `backend/src/*` will cause a recompilation of backend with GHC 
+followed by restarting the server.
+
+Under the hood, node will use Nix and new-cabal to build all of the executables 
+in a contained fashion to minimize and time for development builds.
+
+A `.dir-locals.el` is included to allow for emacs+dante development.
 
 `nix-build`
 ---
@@ -71,22 +92,21 @@ of the project with Nix.
   $ nix-build -o frontend-result -A ghcjs.frontend
   ```
 
-Motivation
----
-
-Building a multi-package project with Nix can be a pain because of
-Nix's lack of incremental building. A small change to a common package
-will require Nix to rebuild that package from scratch, causing a huge
-interruption during development. Although this is usually where Stack
-would shine, Stack doesn't officially support using Nix for Haskell
-derivations, and has zero support for Nix with GHCJS. You *can* build
-Pure apps using only Stack and no Nix, but you lose a lot of
-benefits that `pure-platform` provides, like the curated set of
-package versions that Pure works best with and binary caches of all 
-the Haskell derivations.
-
 How it works
 ---
 
 See
-[project-development.md](https://github.com/grumply/pure-platform/blob/master/docs/project-development.md).
+[project-development.md](https://github.com/grumply/pure-platform/blob/master/docs/project-development.md) where
+local and non-hackage dependency management are also covered.
+
+Thanks
+---
+
+Thanks to [Will Fancher](github.com/elvishjerricco) for 
+[reflex-project-skeleton](github.com/elvishjerricco/reflex-project-skeleton) 
+which this project is based on.
+
+TODO:
+---
+
+Demonstrate Trivial benchmarking and testing.
