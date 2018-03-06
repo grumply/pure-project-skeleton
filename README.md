@@ -20,6 +20,7 @@ Once Nix is installed, everything else is mostly handled for you. To build
 everything for the first time, using node:
 
 ```bash
+$ npm install
 $ npm run init
 ```
 
