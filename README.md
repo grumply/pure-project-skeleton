@@ -10,7 +10,7 @@ Either clone this repo with `--recurse-submodules`, or run `git submodule update
 
 First, run `./deps/pure-platform/try-pure` at least once. This will install `nix` and build the pure ecosystem if necessary.
 
-> NOTE: Pure requires a custom `ghcjs-base`, so the first run of `try-pure` will be very, very slow. Subsequent builds will take advantage of `nix` memoization. Consider becoming acquainted with Pure at [purehs.org](purehs.org) while `try-pure` runs.
+> NOTE: Pure requires a custom `ghcjs-base`, so the first run of `try-pure` will be very, very slow. Subsequent builds will take advantage of `nix` memoization. Consider becoming acquainted with Pure at [purehs.org](http://purehs.org) while `try-pure` runs.
 
 Developing
 ---
