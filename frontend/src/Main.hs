@@ -1,49 +1,46 @@
-{-# LANGUAGE OverloadedStrings, TemplateHaskell, NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import qualified Pure.App as App
-import Pure.View
-import Pure.Render
+import Pure
+import Pure.WebSocket
 
-import Lib
+import Shared
 
 main :: IO ()
-main =
-  let ?serverIp = "127.0.0.1"
-      ?serverPort = 8000
-  in App.run app
+main = clientWS "127.0.0.1" 8081 >>= inject body . app
 
-app = App.App {..}
-  where
-    key    = "MyApp"
-    build  = return
-    prime  = return ()
-    root   = Nothing
-    routes = App.dispatch HomeR
-    pages HomeR = pure (App.partial _MyApp)
+app :: WebSocket -> View
+app = Component $ \self ->
+  let
+    setTime t = modify_ self $ \_ _ -> Just t
+  in
+    def
+      { construct = return Nothing
+      , render = \ws mt ->
+        Div <||>
+          [ helloButton ws
+          , timeButton ws setTime
+          , timeDisplay mt
+          ]
+      }
 
-data MyAppRoute = HomeR deriving Eq
+helloButton ws =
+  let
+    send = notify backendAPI ws sayHello ()
+  in
+    Button <| OnClick (const send) |>
+      [ "Say Hello" ]
 
-data MyAppState ms = MyAppState Millis
+timeButton ws setTime =
+  let
+    send = remote backendAPI ws askTime () setTime
+  in
+    Button <| OnClick (const send) |>
+      [ "Get Time" ]
 
-_MyApp = Controller {..}
-  where
-    key    = "MyApp"
-    build  = return
-    prime  = return ()
-    model  = MyAppState 0
-    view (MyAppState (Millis ms)) =
-      Div [ ]
-        [ Button [ OnClick def sendHello ] "Say Hello"
-        , Br [] []
-        , Button [ OnClick def getTime ] "Get Time"
-        , Br [] []
-        , "Current Time: "
-        , Translated ms
-        ]
-      where
-        getTime _ = return $ Just $ void $
-          remote askTime () $ traverse_ (putModel . MyAppState)
-
-        sendHello _ = return $ Just $ void $
-          message sayHello ()
+timeDisplay Nothing  = Null
+timeDisplay (Just t) =
+  Div <||>
+    [ "Latest time: "
+    , toZonedDateTime t
+    ]

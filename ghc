@@ -1,5 +1,3 @@
 #!/usr/bin/env bash
 
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-
-nix-shell $DIR/default.nix -A shells.ghc --add-root $DIR/dist/ghc/gc-roots/gc-root --indirect --run "$(printf "%q " "$@")"
+nix-shell default.nix -A shells.ghc --add-root dist/ghc/gc-roots/gc-root --indirect --run "$(printf "%q " "$@")"

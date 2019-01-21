@@ -1,44 +1,40 @@
-{-# LANGUAGE OverloadedStrings, TemplateHaskell #-}
 module Main where
 
+import Pure
 import Pure.Server
-import Pure.Connection
-import Pure.WebSocket
+import Pure.WebSocket as WS
 
-import Lib
+import Shared
+
+import Control.Concurrent
+import Control.Monad
+import System.IO
 
 main :: IO ()
-main = run (app "127.0.0.1" 8000)
-
-app ip port = Server {..}
+main = inject body (server ()) >> hSetBuffering stdout NoBuffering >> sleep
   where
-    key   = "server"
-    build = return
-    prime = return ()
-    connection = conn
+    sleep = forever (threadDelay (6 * 10 ^ 10))
 
-conn _ = Connection {..}
-  where
-    build = return
-    prime = void $ do
-      enact backendImpl
-      setExhaustLimit maxBound
+server = Component $ \self -> def
+    { construct = return ()
+    , render    = \_ _ -> Server "127.0.0.1" 8081 conn
+    }
+
+conn = Component $ \self -> def
+  { construct = return ()
+  , executing = do
+      ws <- ask self
+      enact ws backendImpl
+      activate ws
+  }
 
 backendImpl = Impl backendAPI msgs reqs
   where
-    msgs =
-          handleSayHello <:>
-          none
-    reqs =
-          handleAskTime <:>
-          none
+    msgs = handleSayHello <:> WS.none
+    reqs = handleAskTime <:> WS.none
 
--- Note that if this server is running via `npm start`, you will not see "Got Hello!"
-handleSayHello = accepts sayHello $ \_done q ->
-  lift_ $ for q $ \_req ->
-    liftIO $ putStrLn "Got Hello!"
+handleSayHello :: MessageHandler SayHello
+handleSayHello = awaiting $ liftIO (putStrLn "Hello!")
 
-handleAskTime = responds askTime $ \_done q ->
-  lift_ $ for q $ \(rsp,(_rqId,_req)) -> do
-    now <- millis
-    rsp (Right now)
+handleAskTime :: RequestHandler AskTime
+handleAskTime = responding (liftIO time >>= reply)

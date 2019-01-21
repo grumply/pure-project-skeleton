@@ -1,18 +1,13 @@
 {}:
-
 (import ./deps/pure-platform {}).project ({ pkgs, ... }: {
-  overrides = self: super: {
-
-  };
-
   packages = {
-    common = ./common;
     backend = ./backend;
+    shared = ./shared;
     frontend = ./frontend;
   };
 
   shells = {
-    ghc = ["common" "backend" "frontend"];
-    ghcjs = ["common" "frontend"];
+    ghc = [ "backend" "shared" "frontend" ];
+    ghcjs = [ "shared" "frontend" ];
   };
 })

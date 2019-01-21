@@ -1,11 +1,7 @@
-profiling: False
-tests: False
-benchmarks: False
-optimization: 0
-documentation: False
+optimization: 2
 allow-newer: all
 jobs: $ncpus
 packages:
-  common/
+  shared/
   backend/
   frontend/

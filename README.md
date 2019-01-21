@@ -1,113 +1,89 @@
-Multi-package Pure example
+Multi-package Pure Skeleton with Development Environment
 ---
 
-This repo is an example of combining `cabal.project`, Nix, node, and
-`pure-platform` to improve the developer experience.
+This repo is an example of combining `cabal.project`, `Nix`, `node`, and `pure-platform` for an improved developer experience.
 
 First run
 ---
 
-Either clone this repo with `--recurse-submodules`, or run `git
-submodule update --init --recursive` in this directory after cloning
-to make sure `pure-platform` is checked out. 
+Either clone this repo with `--recurse-submodules`, or run `git submodule update --init --recursive` in this directory after cloning to make sure `pure-platform` is checked out. 
 
-First, run `./deps/pure-platform/try-pure` at least once. We won't 
-manually use it at all in this project, but it does some extra work to 
-setup your system requirements automatically, namely installing Nix and
-configuring the Pure binary cache.
+First, run `./deps/pure-platform/try-pure` at least once. This will install `nix` and build the pure ecosystem if necessary.
 
-Once Nix is installed, everything else is mostly handled for you. To build
-everything for the first time, using node:
-
-```bash
-$ npm install
-$ npm run init
-```
-
-Development
+Developing
 ---
 
-While developing, have the node dev script running to manage re-builds and serve
-the javascript benchmarks, tests, and application.
+> These two development servers avoid the need to re-enter a nix shell for every build. This can greatly speed up build times compared to `nix-build`.
+
+To run a backend development server that will:
+
+- watch frontend and shared Haskell and Cabal files for changes
+- rebuild and restart the server when necessary
+- restart the server 
 
 ```bash
-$ npm run dev
+$ ./ghc npm run dev:backend
 ```
 
-Changes to `backend/bench/*` will cause a recompilation of backend:backend-bench
-with GHC followed by automatically running the benchmarks. Similarly for 
-`common/bench/*`. However, changes to `frontend/bench/*` will cause a 
-recompilation of frontend:frontend-bench with GHCJS followed by reloading the 
-browser tab running the benchmarks. The same applies for tests.
+To run a frontend development server that will:
 
-Changes to `backend/src/*` will cause a recompilation of backend with GHC 
-followed by restarting the server.
+- serve your application at `localhost:8080` 
+- watch frontend and shared Haskell and Cabal files for changes
+- rebuild the application when necessary
+- inject newly-built applications into any connected browsers:
 
-Under the hood, node will use Nix and new-cabal to build all of the executables 
-in a contained fashion to minimize and time for development builds.
+```bash
+$ ./ghcjs npm install
+$ ./ghcjs npm run dev:frontend
+```
 
-A `.dir-locals.el` is included to allow for emacs+dante development.
+The web server configuration is at `dist/site/bs-config.js`.
+
+To run `ghcid` or similar:
+
+```bash
+$ ./ghc ghcid -c "cabal new-repl {backend|shared|frontend}"
+```
+
+Production
+---
 
 `nix-build`
 ---
 
-Nix is useful for creating deterministic, production ready build
-products. You can use the `nix-build` command to build all the parts
-of the project with Nix.
+Nix can be used for creating deterministic, production-ready build products. You can use the `nix-build` command to build all or parts of your multi-package project with Nix.
 
 - Build everything
 
   ```bash
   $ nix-build
-  trace:
-
-  Skipping ios apps; system is x86_64-linux, but x86_64-darwin is needed.
-  Use `nix-build -A all` to build with remote machines.
-  See: https://nixos.org/nixos/manual/options.html#opt-nix.buildMachines
-
-
-  /nix/store/{..}-pure-project
-
+    {.. build output omitted ..}
   $ tree result
   result
   ├── ghc
   │   ├── backend -> /nix/store/{..}-backend-0.1.0.0
-  │   ├── common -> /nix/store/{..}-common-0.1.0.0
-  │   └── frontend -> /nix/store/{..}-frontend-0.1.0.0
+  │   ├── frontend -> /nix/store/{..}-frontend-0.1.0.0
+  │   └── shared -> /nix/store/{..}-shared-0.1.0.0
   └── ghcjs
-      ├── common -> /nix/store/{..}-common-0.1.0.0
-      └── frontend -> /nix/store/{..}-frontend-0.1.0.0
+      ├── frontend -> /nix/store/{..}-frontend-0.1.0.0
+      └── shared -> /nix/store/{..}-shared-0.1.0.0
 
-  9 directories, 0 files
+  7 directories, 0 files
   ```
 
-- Build the backend
+- Build the backend only
 
   ```bash
   $ nix-build -o backend-result -A ghc.backend
   ```
 
-- Build the frontend
+- Build the frontend only
 
   ```bash
   $ nix-build -o frontend-result -A ghcjs.frontend
   ```
 
-How it works
----
-
-See
-[project-development.md](https://github.com/grumply/pure-platform/blob/master/docs/project-development.md) where
-local and non-hackage dependency management are also covered.
-
 Thanks
 ---
 
-Thanks to [Will Fancher](https://github.com/elvishjerricco) for 
-[reflex-project-skeleton](https://github.com/elvishjerricco/reflex-project-skeleton) 
-which this project is based on.
-
-TODO:
----
-
-Demonstrate Trivial benchmarking and testing.
+Thanks to [Will Fancher](https://github.com/elvishjerricco) for [reflex-project-skeleton](https://github.com/elvishjerricco/reflex-project-skeleton) which this project is based on.

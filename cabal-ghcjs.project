@@ -1,10 +1,7 @@
 compiler: ghcjs
-profiling: False
-tests: False
 benchmarks: False
-optimization: 0
-documentation: False
+optimization: 1
 jobs: $ncpus
 packages:
-  common/
+  shared/
   frontend/
