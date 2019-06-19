@@ -1,38 +1,36 @@
-Multi-package Pure Skeleton with Development Environment
----
+# Multi-package Pure Skeleton with Development Environment
 
-This repo is an example of combining `cabal.project`, `Nix`, `node`, and `pure-platform` for an improved developer experience.
+This repo is an example of combining `cabal.project`, `Nix`, `node`, `cachix`, and `pure-platform` for an improved development experience.
 
-First run
----
+## First run
 
-Either clone this repo with `--recurse-submodules`, or run `git submodule update --init --recursive` in this directory after cloning to make sure `pure-platform` is checked out. 
+Follow the steps at [purehs.cachix.org](https://purehs.cachix.org) to install [nix](https://nixos.org/nix/) and [cachix](https://cachix.org).
 
-First, run `./deps/pure-platform/try-pure` at least once. This will install `nix` and build the pure ecosystem if necessary.
+## Development
 
-> NOTE: Pure requires a custom `ghcjs-base`, so the first run of `try-pure` will be very, very slow. Subsequent builds will take advantage of `nix` memoization. Consider becoming acquainted with Pure at [purehs.org](http://purehs.org) while `try-pure` runs.
-
-Developing
----
+> If you're not running an OS and CPU architecture combination for which Cachix has a pre-built and cached copy of Pure's custom `ghcjs-base`, the first run built will be very, very slow. Subsequent builds will take advantage of nix memoization.
 
 > These two development servers avoid the need to re-enter a nix shell for every build. This can greatly speed up build times compared to `nix-build`.
 
+### Backend Development 
+
 To run a backend development server that will:
 
-- watch frontend and shared Haskell and Cabal files for changes
+- watch backend and shared Haskell and Cabal files for changes
 - rebuild and restart the server when necessary
-- restart the server 
 
 ```bash
 $ ./ghc npm run dev:backend
 ```
+
+### Frontend Development
 
 To run a frontend development server that will:
 
 - serve your application at `localhost:8080` 
 - watch frontend and shared Haskell and Cabal files for changes
 - rebuild the application when necessary
-- inject newly-built applications into any connected browsers:
+- inject newly-built applications into any connected browsers
 
 ```bash
 $ ./ghcjs npm install
@@ -41,17 +39,17 @@ $ ./ghcjs npm run dev:frontend
 
 The web server configuration is at `dist/site/bs-config.js`.
 
-To run `ghcid` or similar:
+### GHCID
+
+To run `ghcid` or similar for a simple compile-loop development flow:
 
 ```bash
 $ ./ghc ghcid -c "cabal new-repl {backend|shared|frontend}"
 ```
 
-Production
----
+## Production
 
-`nix-build`
----
+### `nix-build`
 
 Nix can be used for creating deterministic, production-ready build products. You can use the `nix-build` command to build all or parts of your multi-package project with Nix.
 
@@ -85,7 +83,7 @@ Nix can be used for creating deterministic, production-ready build products. You
   $ nix-build -o frontend-result -A ghcjs.frontend
   ```
 
-Thanks
----
+## Thanks
 
-Thanks to [Will Fancher](https://github.com/elvishjerricco) for [reflex-project-skeleton](https://github.com/elvishjerricco/reflex-project-skeleton) which this project is based on.
+Thanks to [Will Fancher](https://github.com/elvishjerricco) for [reflex-project-skeleton](https://github.com/elvishjerricco/reflex-project-skeleton) on which this project is based.
+
