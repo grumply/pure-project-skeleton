@@ -39,14 +39,6 @@ $ ./ghcjs npm run dev:frontend
 
 The web server configuration is at `dist/site/bs-config.js`.
 
-### GHCID
-
-To run `ghcid` or similar for a simple compile-loop development flow:
-
-```bash
-$ ./ghc ghcid -c "cabal new-repl {backend|shared|frontend}"
-```
-
 ## Production
 
 ### `nix-build`
