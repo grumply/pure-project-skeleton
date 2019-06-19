@@ -1,4 +1,0 @@
-[submodule "deps/pure-platform"]
-	path = deps/pure-platform
-	url = https://github.com/grumply/pure-platform
-	branch = master
