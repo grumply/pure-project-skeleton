@@ -1,0 +1,15 @@
+os:
+- linux
+- osx
+language: nix
+sudo: required
+before_script:
+- sudo mount -o remount,exec,size=4G,mode=755 /run/user || true
+- sudo mkdir -p /etc/nix
+- echo "trusted-users = root $USER" | sudo tee -a /etc/nix/nix.conf
+- sudo launchctl kickstart -k system/org.nixos.nix-daemon || true
+script:
+- nix-env -iA cachix -f https://cachix.org/api/v1/install
+- cachix use purehs
+- cachix push purehs --watch-store&
+- nix-build -j2
