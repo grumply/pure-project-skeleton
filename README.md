@@ -39,6 +39,20 @@ $ ./ghcjs npm run dev:frontend
 
 The web server configuration is at `dist/site/bs-config.js`.
 
+### Development Tools
+
+To install [ghcid](https://github.com/ndmitchell/ghcid):
+
+```bash
+nix-env -iA nixpkgs.haskellPackages.ghcid
+```
+
+To run `ghcid` for `frontend`:
+
+```bash
+./ghc ghcid -c "cabal new-repl frontend"
+```
+
 ## Production
 
 ### `nix-build`
