@@ -1,6 +1,7 @@
 matrix:
   include:
     - os: linux
+      dist: xenial
       language: nix
     - os: osx
       osx_image: xcode10.2
