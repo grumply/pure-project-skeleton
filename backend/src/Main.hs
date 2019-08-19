@@ -22,10 +22,11 @@ server = Component $ \self -> def
 
 conn = Component $ \self -> def
   { construct = return ()
-  , executing = do
+  , executing = \st -> do
       ws <- ask self
       enact ws backendImpl
       activate ws
+      pure st
   }
 
 backendImpl = Impl backendAPI msgs reqs
