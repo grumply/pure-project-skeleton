@@ -10,9 +10,5 @@ mkRequest "AskTime" [t|() -> Time|]
 
 backendAPI = api msgs reqs
   where
-    msgs =
-          sayHello <:>
-          WS.none
-    reqs =
-          askTime <:>
-          WS.none
+    msgs = sayHello <:> WS.none
+    reqs = askTime <:> WS.none
