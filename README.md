@@ -1,5 +1,7 @@
 # Multi-package Pure Skeleton with Development Environment
 
+[![Build Status](https://travis-ci.org/grumply/pure-project-skeleton.svg?branch=master)](https://travis-ci.org/grumply/pure-project-skeleton)
+
 This repo is an example of combining `cabal.project`, `Nix`, `node`, `cachix`, and `pure-platform` for an improved development experience.
 
 ## First run
