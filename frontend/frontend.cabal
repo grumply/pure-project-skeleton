@@ -16,6 +16,7 @@ cabal-version:       >=1.10
 
 executable frontend
   main-is:             Main.hs
+  ghcjs-options:       -dedupe -DGHCJS_BROWSER -DGHCJS_GC_INTERVAL=30000000
   build-depends:       base,
                        pure,
                        pure-websocket
