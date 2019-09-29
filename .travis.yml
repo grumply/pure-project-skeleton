@@ -24,7 +24,7 @@ script:
   - nix-env -iA nixpkgs.pkgs.closurecompiler
   - ./ghc npm run prod:backend
   - ./ghcjs npm run prod:frontend
-  - du -sh ./dist/ghc/build/*/ghc-*/backend-*/x/backend/build/backend/backend
+  - du -sh ./dist/ghc/build/*/ghc-*/backend-*/x/backend/opt/build/backend/backend
   - du -sh ./dist/site/frontend.js
   - du -sh ./dist/site/frontend.js.min
   - du -sh ./dist/site/frontend.js.min.gz
