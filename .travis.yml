@@ -21,8 +21,8 @@ script:
     https://cachix.cachix.org --trusted-public-keys 'cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
     cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM= purehs.cachix.org-1:zkfNuhEOyL/EbMKiSdcJHUClo697yfna10ys3s7HbZ8='
   - cachix use purehs
-  - ./ghc cabal new-build backend 
-  - ./ghcjs cabal new-build frontend
+  - ./ghc npm run prod:backend
+  - ./ghcjs npm run prod:frontend
   - du -sh ./dist/ghc/build/*/ghc-*/backend-*/x/backend/build/backend/backend
   - du -sh ./dist/site/frontend.js
   - du -sh ./dist/site/frontend.js.min
