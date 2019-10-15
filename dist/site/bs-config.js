@@ -1,6 +1,6 @@
 module.exports = {
-    ui: { port: 8080 },
-    port: 3000,
+    ui: { port: 3000 },
+    port: 8080,
     files: ["*.js"],
     server: {
         baseDir: "./",
