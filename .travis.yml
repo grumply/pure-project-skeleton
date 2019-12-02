@@ -1,5 +1,10 @@
-_nix: &nix |-
+_nix_linux: &nix-linux |-
   curl https://nixos.org/nix/install | sh
+  source /home/travis/.nix-profile/etc/profile.d/nix.sh
+
+_nix_osx: &nix-osx |-
+  curl https://nixos.org/nix/install | sh
+  source /Users/travis/.nix-profile/etc/profile.d/nix.sh
 
 _cachix: &cachix |-
   nix-env -if https://github.com/cachix/cachix/tarball/master --extra-substituters https://cachix.cachix.org --trusted-public-keys 'cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM= purehs.cachix.org-1:zkfNuhEOyL/EbMKiSdcJHUClo697yfna10ys3s7HbZ8='
@@ -28,16 +33,16 @@ before_install:
 jobs:
   include:
     - os: linux
-      install: &linux-install
-        - *nix
-        - source /home/travis/.nix-profile/etc/profile.d/nix.sh
+      install:
+        - *nix-linux
         - *cachix
       script: *ghc-build
       after_script: *ghc-result
 
     - os: linux
       install:
-        - *linux-install
+        - *nix-linux
+        - *cachix
         - *closure
       script: *ghcjs-build
       after_script: *ghcjs-result
@@ -45,9 +50,8 @@ jobs:
     - os: osx
       osx_image: xcode10.2
       language: generic
-      install: &osx-install
-        - *nix
-        - source /Users/travis/.nix-profile/etc/profile.d/nix.sh
+      install:
+        - *nix-osx
         - *cachix
       script: *ghc-build
       after_script: *ghc-result
@@ -56,7 +60,8 @@ jobs:
       osx_image: xcode10.2
       language: generic
       install:
-        - *osx-install
+        - *nix-osx
+        - *cachix
         - *closure
       script: *ghcjs-build
       after_script: *ghcjs-result
