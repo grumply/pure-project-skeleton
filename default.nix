@@ -4,8 +4,6 @@ let pure-platform = import (builtins.fetchTarball https://github.com/grumply/pur
 
 in pure-platform.project ({ pkgs, ... }: {
 
-  minimal = true;
-
   packages = {
     backend = ./backend;
     shared = ./shared;
