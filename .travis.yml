@@ -1,30 +1,51 @@
-matrix:
+before_script:
+  - sudo mount -o remount,exec,size=4G,mode=755 /run/user || true
+  - nix-env -if https://github.com/cachix/cachix/tarball/master --extra-substituters
+    https://cachix.cachix.org --trusted-public-keys 'cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+    cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM= purehs.cachix.org-1:zkfNuhEOyL/EbMKiSdcJHUClo697yfna10ys3s7HbZ8='
+  - cachix use purehs
+
+jobs:
   include:
     - os: linux
-      before_install:
+      before-install:
         - curl https://nixos.org/nix/install | sh
         - source /home/travis/.nix-profile/etc/profile.d/nix.sh
+      script:
+        - ./ghc npm run prod:backend
+        - du -sh ./dist/ghc/build/*/ghc-*/backend-*/x/backend/opt/build/backend/backend
+
+    - os: linux
+      before-install:
+        - curl https://nixos.org/nix/install | sh
+        - source /home/travis/.nix-profile/etc/profile.d/nix.sh
+      script:
+        - nix-env -iA nixpkgs.pkgs.closurecompiler
+        - ./ghcjs npm run prod:frontend
+        - du -sh ./dist/site/frontend.js
+        - du -sh ./dist/site/frontend.js.min
+        - du -sh ./dist/site/frontend.js.min.gz
+
+
     - os: osx
       osx_image: xcode10.2
       language: generic
       before_install:
         - curl https://nixos.org/nix/install | sh
         - source /Users/travis/.nix-profile/etc/profile.d/nix.sh
+      script:
+        - ./ghc npm run prod:backend
+        - du -sh ./dist/ghc/build/*/ghc-*/backend-*/x/backend/opt/build/backend/backend
 
-sudo: required
-
-before_script:
-  - sudo mount -o remount,exec,size=4G,mode=755 /run/user || true
-
-script:
-  - nix-env -if https://github.com/cachix/cachix/tarball/master --extra-substituters
-    https://cachix.cachix.org --trusted-public-keys 'cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
-    cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM= purehs.cachix.org-1:zkfNuhEOyL/EbMKiSdcJHUClo697yfna10ys3s7HbZ8='
-  - cachix use purehs
-  - nix-env -iA nixpkgs.pkgs.closurecompiler
-  - ./ghc npm run prod:backend
-  - ./ghcjs npm run prod:frontend
-  - du -sh ./dist/ghc/build/*/ghc-*/backend-*/x/backend/opt/build/backend/backend
-  - du -sh ./dist/site/frontend.js
-  - du -sh ./dist/site/frontend.js.min
-  - du -sh ./dist/site/frontend.js.min.gz
+    - os: osx
+      osx_image: xcode10.2
+      language: generic
+      before_install:
+        - curl https://nixos.org/nix/install | sh
+        - source /Users/travis/.nix-profile/etc/profile.d/nix.sh
+      script:
+        - nix-env -iA nixpkgs.pkgs.closurecompiler
+        - ./ghcjs npm run prod:frontend
+        - du -sh ./dist/site/frontend.js
+        - du -sh ./dist/site/frontend.js.min
+        - du -sh ./dist/site/frontend.js.min.gz
