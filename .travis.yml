@@ -1,31 +1,31 @@
 _nix_linux: &nix-linux |-
-  curl https://nixos.org/nix/install | sh
-  source /home/travis/.nix-profile/etc/profile.d/nix.sh
+  curl https://nixos.org/nix/install | sh && source /home/travis/.nix-profile/etc/profile.d/nix.sh
 
 _nix_osx: &nix-osx |-
-  curl https://nixos.org/nix/install | sh
-  source /Users/travis/.nix-profile/etc/profile.d/nix.sh
+  curl https://nixos.org/nix/install | sh && source /Users/travis/.nix-profile/etc/profile.d/nix.sh
 
 _cachix: &cachix |-
   nix-env -if https://github.com/cachix/cachix/tarball/master --extra-substituters https://cachix.cachix.org --trusted-public-keys 'cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM= purehs.cachix.org-1:zkfNuhEOyL/EbMKiSdcJHUClo697yfna10ys3s7HbZ8='
+
+_purehs: &purehs |-
   cachix use purehs
 
 _closure: &closure |-
   nix-env -iA nixpkgs.pkgs.closurecompiler
 
-_ghc_build: &ghc-build |-
-  ./ghc npm run prod:backend
+_ghc_build: &ghc-build
+  - ./ghc npm run prod:backend
 
-_ghc_result: &ghc-result |-
-  du -sh ./dist/ghc/build/*/ghc-*/backend-*/x/backend/opt/build/backend/backend
+_ghc_result: &ghc-result
+  - du -sh ./dist/ghc/build/*/ghc-*/backend-*/x/backend/opt/build/backend/backend
 
-_ghcjs_build: &ghcjs-build |-
-  ./ghcjs npm run prod:frontend
+_ghcjs_build: &ghcjs-build
+  - ./ghcjs npm run prod:frontend
 
-_ghcjs_result: &ghcjs-result |-
-  du -sh ./dist/site/frontend.js
-  du -sh ./dist/site/frontend.js.min
-  du -sh ./dist/site/frontend.js.min.gz
+_ghcjs_result: &ghcjs-result
+  - du -sh ./dist/site/frontend.js
+  - du -sh ./dist/site/frontend.js.min
+  - du -sh ./dist/site/frontend.js.min.gz
 
 before_install:
   - sudo mount -o remount,exec,size=4G,mode=755 /run/user || true
@@ -36,16 +36,22 @@ jobs:
       install:
         - *nix-linux
         - *cachix
-      script: *ghc-build
-      after_script: *ghc-result
+        - *purehs
+      script:
+        *ghc-build
+      after_script:
+        *ghc-result
 
     - os: linux
       install:
         - *nix-linux
         - *cachix
+        - *purehs
         - *closure
-      script: *ghcjs-build
-      after_script: *ghcjs-result
+      script:
+        *ghcjs-build
+      after_script:
+        *ghcjs-result
 
     - os: osx
       osx_image: xcode10.2
@@ -53,8 +59,11 @@ jobs:
       install:
         - *nix-osx
         - *cachix
-      script: *ghc-build
-      after_script: *ghc-result
+        - *purehs
+      script:
+        *ghc-build
+      after_script:
+        *ghc-result
 
     - os: osx
       osx_image: xcode10.2
@@ -62,6 +71,9 @@ jobs:
       install:
         - *nix-osx
         - *cachix
+        - *purehs
         - *closure
-      script: *ghcjs-build
-      after_script: *ghcjs-result
+      script:
+        *ghcjs-build
+      after_script:
+        *ghcjs-result
