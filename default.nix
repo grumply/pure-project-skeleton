@@ -16,4 +16,10 @@ in pure-platform.project ({ pkgs, ... }: {
     ghc = [ "backend" "shared" "frontend" ];
     ghcjs = [ "shared" "frontend" ];
   };
+
+  tools = ghc: with ghc; [
+    # uncomment to enable ghcid
+    # to run ghcid: ./ghc ghcid -c "cabal new-repl frontend"
+    # pkgs.haskellPackages.ghcid
+  ];
 })

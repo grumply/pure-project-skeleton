@@ -43,16 +43,24 @@ The web server configuration is at `dist/site/bs-config.js`.
 
 ### Development Tools
 
-To install [ghcid](https://github.com/ndmitchell/ghcid):
+To install [ghcid](https://github.com/ndmitchell/ghcid), uncomment `pkgs.haskellPackages.ghcid` in the project's `default.nix` tools.
 
-```bash
-nix-env -iA nixpkgs.haskellPackages.ghcid
-```
-
-To run `ghcid` for `frontend`:
+Run `ghcid` for `frontend`
 
 ```bash
 ./ghc ghcid -c "cabal new-repl frontend"
+```
+
+or `backend`
+
+```bash
+./ghc ghcid -c "cabal new-repl backend"
+```
+
+or `shared`
+
+```bash
+./ghc ghcid -c "cabal new-repl shared"
 ```
 
 ## Production
