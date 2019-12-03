@@ -10,11 +10,9 @@ Follow the steps at [purehs.cachix.org](https://purehs.cachix.org) to install [n
 
 ## Development
 
-> If you're not running an OS and CPU architecture combination for which Cachix has a pre-built and cached copy of Pure's custom `ghcjs-base`, the first run built will be very, very slow. Subsequent builds will take advantage of nix memoization.
+If you're not running an OS and CPU architecture combination for which Cachix has a pre-built and cached copy of Pure's custom `ghcjs-base`, the first build will be very, very slow. Subsequent builds will take advantage of nix memoization. Most recent linux and macos systems will benefit from the binary cache.
 
-> These two development servers avoid the need to re-enter a nix shell for every build. This can greatly speed up build times compared to `nix-build`.
-
-### Backend Development 
+### Backend Development
 
 To run a backend development server that will:
 
@@ -45,13 +43,11 @@ The web server configuration is at `dist/site/bs-config.js`.
 
 Support is included for both `hie` and `ghcid`.
 
-#### hie
+#### Haskell IDE Engine (hie) with VS Code
 
-A simple wrapper for easy VS Code + hie integration exists in the file `lsp`. A few configuration steps are required to enable the integration.
+[hie](https://github.com/haskell/haskell-ide-engine) is a full-featured Haskell IDE with [hlint](https://github.com/ndmitchell/hlint) integration, quick actions and refactoring, haddock documentation and type on hover, jump to definition, completion, formatting, and more.
 
-* Install [Haskell Language Server for VS Code](https://marketplace.visualstudio.com/items?itemName=alanz.vscode-hie-server).
-
-* Follow the steps at [purehs.cachix.org](https://purehs.cachix.org) to enable cached builds.
+* Be sure you followed the steps at [purehs.cachix.org](https://purehs.cachix.org) to enable cached builds as directed in [First run](#first-run)
 
 * Tell `cachix` to use the `all-hies` build cache.
   ```bash
@@ -63,7 +59,9 @@ A simple wrapper for easy VS Code + hie integration exists in the file `lsp`. A 
   nix-env -iA selection --arg selector 'p: { inherit (p) ghc844; }' -f https://github.com/infinisil/all-hies/tarball/master
   ```
 
-* Finally, in VS Code settings search for `useHieWrapper` and be sure the `Use Custom Hie Wrapper` checkbox is selected and set the `User Custom Hie Wrapper Path`
+* Install [Haskell Language Server for VS Code](https://marketplace.visualstudio.com/items?itemName=alanz.vscode-hie-server).
+
+* In VS Code settings search for `useHieWrapper` and be sure the `Use Custom Hie Wrapper` checkbox is selected and set the `User Custom Hie Wrapper Path` to
   ```bash
   ${workspaceFolder}/lsp
   ```
