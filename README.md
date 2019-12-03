@@ -29,7 +29,7 @@ $ ./ghc npm run dev:backend
 
 To run a frontend development server that will:
 
-- serve your application at `localhost:8080` 
+- serve your application at `localhost:8080`
 - watch frontend and shared Haskell and Cabal files for changes
 - rebuild the application when necessary
 - inject newly-built applications into any connected browsers
@@ -43,25 +43,53 @@ The web server configuration is at `dist/site/bs-config.js`.
 
 ### Development Tools
 
-To install [ghcid](https://github.com/ndmitchell/ghcid), uncomment `pkgs.haskellPackages.ghcid` in the project's `default.nix` tools.
+Support is included for both `hie` and `ghcid`.
 
-Run `ghcid` for `frontend`
+#### hie
 
-```bash
-./ghc ghcid -c "cabal new-repl frontend"
-```
+A simple wrapper for easy VS Code + hie integration exists in the file `lsp`. A few configuration steps are required to enable the integration.
 
-or `backend`
+* Install [Haskell Language Server for VS Code](https://marketplace.visualstudio.com/items?itemName=alanz.vscode-hie-server).
 
-```bash
-./ghc ghcid -c "cabal new-repl backend"
-```
+* Follow the steps at [purehs.cachix.org](https://purehs.cachix.org) to enable cached builds.
 
-or `shared`
+* Tell `cachix` to use the `all-hies` build cache.
+  ```bash
+  cachix use all-hies
+  ```
 
-```bash
-./ghc ghcid -c "cabal new-repl shared"
-```
+* Install the ghc 8.4.4 hie to match pure-platform's ghc version.
+  ```bash
+  nix-env -iA selection --arg selector 'p: { inherit (p) ghc844; }' -f https://github.com/infinisil/all-hies/tarball/master
+  ```
+
+* Finally, in VS Code settings search for `useHieWrapper` and be sure the `Use Custom Hie Wrapper` checkbox is selected and set the `User Custom Hie Wrapper Path`
+  ```bash
+  ${workspaceFolder}/lsp
+  ```
+
+#### ghcid
+
+ [ghcid](https://github.com/ndmitchell/ghcid) integration is also available, but has fewer features than `hie`.
+
+* uncomment `pkgs.haskellPackages.ghcid` in the project's `default.nix` tools.
+* Run `ghcid` for `frontend`
+
+  ```bash
+  ./ghc ghcid -c "cabal new-repl frontend"
+  ```
+
+  or for `backend`
+
+  ```bash
+  ./ghc ghcid -c "cabal new-repl backend"
+  ```
+
+  or for `shared`
+
+  ```bash
+  ./ghc ghcid -c "cabal new-repl shared"
+  ```
 
 ## Production
 
