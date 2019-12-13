@@ -65,7 +65,7 @@ dependencies:
   - pure-websocket
 
 executables:
-  frontend:
+  backend:
     source-dirs:
       - src
       - ../shared/src

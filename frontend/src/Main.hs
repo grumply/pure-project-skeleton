@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import Pure
@@ -24,20 +23,23 @@ app = Component $ \self ->
           ]
       }
 
+helloButton :: WebSocket -> View
 helloButton ws =
   let
-    send = notify backendAPI ws sayHello ()
+    say = notify backendAPI ws sayHello ()
   in
-    Button <| OnClick (const send) |>
+    Button <| OnClick (const say) |>
       [ "Say Hello" ]
 
+timeButton :: WebSocket -> (Time -> IO ()) -> View
 timeButton ws setTime =
   let
-    send = remote backendAPI ws askTime () setTime
+    set = remote backendAPI ws askTime () setTime
   in
-    Button <| OnClick (const send) |>
+    Button <| OnClick (const set) |>
       [ "Get Time" ]
 
+timeDisplay :: Maybe Time -> View
 timeDisplay Nothing  = Null
 timeDisplay (Just t) =
   Div <||>

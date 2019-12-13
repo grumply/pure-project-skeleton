@@ -6,20 +6,21 @@ import Pure.WebSocket as WS
 
 import Shared
 
-import Control.Concurrent
 import Control.Monad
 import System.IO
 
 main :: IO ()
 main = inject body (server ()) >> hSetBuffering stdout NoBuffering >> sleep
   where
-    sleep = forever (threadDelay (6 * 10 ^ 10))
+    sleep = forever (delay (Seconds 60 0))
 
-server = Component $ \self -> def
+server :: () -> View
+server = Component $ \_self -> def
     { construct = return ()
     , render    = \_ _ -> Server "127.0.0.1" 8081 conn
     }
 
+conn :: WebSocket -> View
 conn = Component $ \self -> def
   { construct = return ()
   , executing = \st -> do
@@ -29,6 +30,9 @@ conn = Component $ \self -> def
       pure st
   }
 
+backendImpl :: ( msgs ~ '[SayHello]
+               , reqs ~ '[AskTime]
+               ) => Implementation msgs reqs msgs reqs
 backendImpl = Impl backendAPI msgs reqs
   where
     msgs = handleSayHello <:> WS.none

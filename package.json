@@ -34,8 +34,8 @@
     "remove-index": "rm dist/ghcjs/build/*/ghcjs-8.4.0.1/*/x/*/build/frontend/frontend.jsexe/index.html",
     "distribute": "cp dist/ghcjs/build/*/ghcjs-8.4.0.1/*/x/*/build/frontend/frontend.jsexe/* dist/site/",
     "flush": "rm -r dist/ghcjs/build/*/ghcjs-8.4.0.1/*",
-    "prod:backend": "cabal new-build backend --project-file=cabal.project --builddir=dist/ghc/",
-    "prod:frontend": "cabal new-build exe:frontend --project-file=cabal-ghcjs.project --builddir=dist/ghcjs/ && cp ./dist/ghcjs/build/*/ghcjs-*/*/x/*/build/frontend/frontend.jsexe/all.js ./dist/site/frontend.js && closure-compiler --compilation_level ADVANCED_OPTIMIZATIONS --jscomp_off=\"*\" --js ./dist/site/frontend.js --js_output_file dist/site/frontend.js.min && gzip < ./dist/site/frontend.js.min > ./dist/site/frontend.js.min.gz"
+    "prod:backend": "cabal new-build backend --project-file=cabal.project --builddir=dist/ghc/ --enable-optimization=2 && strip dist/ghc/build/*/ghc-8.4.4/*/x/backend/opt/build/backend/backend",
+    "prod:frontend": "cabal new-build exe:frontend --project-file=cabal-ghcjs.project --builddir=dist/ghcjs/ --enable-optimization=2 && cp ./dist/ghcjs/build/*/ghcjs-*/*/x/*/build/frontend/frontend.jsexe/all.js ./dist/site/frontend.js && closure-compiler --compilation_level ADVANCED_OPTIMIZATIONS --jscomp_off=\"*\" --js ./dist/site/frontend.js --js_output_file dist/site/frontend.js.min && gzip < ./dist/site/frontend.js.min > ./dist/site/frontend.js.min.gz"
   },
   "author": "$author",
   "email": "$email",
