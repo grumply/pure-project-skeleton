@@ -23,5 +23,5 @@ jobs:
 
     - name: build
       run: |
-        nix-shell default.nix -A shells.ghc --run "cabal new-build backend"
-        nix-shell default.nix -A shells.ghcjs --run "cabal new-build frontend --project-file=cabal-ghcjs.project"
+        nix-build -o result -A ghcjs.frontend
+        nix-build -o result -A ghc.backend
