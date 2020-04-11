@@ -4,30 +4,39 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4b581dba79160093e373a6a0ee6e81016b6ffc1c479057aa6cedb1da9c534837
+-- hash: a01aad8510c7c7ee37bf55f604540fea908c883cb4838b00cd7bd00ab2ead148
 
-name:                shared
-version:             0.1.0.0
-synopsis:            shared types and apis
-license:             BSD3
-license-file:        LICENSE
-author:              <Author>
-maintainer:          <Author>
-category:            Web
-build-type:          Simple
+name:           test
+version:        0.1.0.0
+synopsis:       executable tests
+category:       Web
+author:         <Author>
+maintainer:     <Author>
+license:        BSD3
+build-type:     Simple
 
-library
-  exposed-modules:
-    Shared
+executable test
+  main-is: Main.hs
   other-modules:
-    Paths_shared
-  build-depends:
-    base,
-    pure,
-    pure-websocket
+      Paths_test
   hs-source-dirs:
-    src
-  default-language: Haskell2010
+      src
   default-extensions: AutoDeriveTypeable BangPatterns ConstraintKinds DataKinds DefaultSignatures DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DoAndIfThenElse EmptyCase EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving ImplicitParams InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PartialTypeSignatures PatternGuards PatternSynonyms PolyKinds RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeFamilyDependencies TypeOperators TypeSynonymInstances ViewPatterns TemplateHaskell
   ghc-options: -Wall -fno-warn-unused-do-bind -rtsopts -threaded
   ghcjs-options: -threaded -dedupe -DGHCJS_BROWSER -DGHCJS_GC_INTERVAL=3000000
+  build-depends:
+      backend
+    , base
+    , bytestring
+    , containers
+    , directory
+    , filepath
+    , frontend
+    , pure
+    , pure-bench
+    , pure-elm
+    , pure-server
+    , pure-test
+    , pure-websocket
+    , shared
+  default-language: Haskell2010

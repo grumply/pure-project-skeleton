@@ -1,8 +1,8 @@
 { nixpkgs ? import <nixpkgs> {} }:
 
-let pure-platform = import (builtins.fetchTarball https://github.com/grumply/pure-platform/tarball/master) {};
+let pure-platform = import (builtins.fetchTarball https://github.com/grumply/pure-platform/tarball/245affcf90d655ca4333b1e05d3e1ad399758381) {};
 
-in pure-platform.project ({ pkgs, ... }: {
+in pure-platform.project ({ pkgs, ghcjs, ... }: {
 
   minimal = true;
 
@@ -10,16 +10,21 @@ in pure-platform.project ({ pkgs, ... }: {
     backend = ./backend;
     shared = ./shared;
     frontend = ./frontend;
+    server = ./server;
+
+    test = ./test;
+    dev = ./dev;
   };
 
   shells = {
-    ghc = [ "backend" "shared" "frontend" ];
+    ghc = [ "dev" "server" "backend" "shared" "frontend" "test" ];
     ghcjs = [ "shared" "frontend" ];
   };
 
   tools = ghc: with ghc; [
-    # uncomment to enable ghcid
-    # to run ghcid: ./ghc ghcid -c "cabal new-repl frontend"
-    # pkgs.haskellPackages.ghcid
+    pkgs.haskellPackages.ghcid
+    pkgs.haskellPackages.fsnotify
+    pkgs.pkgs.dhall-json
   ];
+
 })

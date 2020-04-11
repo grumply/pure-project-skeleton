@@ -1,6 +1,5 @@
 compiler: ghcjs
-benchmarks: False
-optimization: 1
+allow-newer: all
 jobs: $ncpus
 packages:
   shared/

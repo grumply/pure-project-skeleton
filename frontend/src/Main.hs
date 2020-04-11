@@ -6,7 +6,9 @@ import Pure.WebSocket
 import Shared
 
 main :: IO ()
-main = clientWS "127.0.0.1" 8081 >>= inject body . app
+main = do
+  ws <- clientWS "127.0.0.1" 8081
+  inject body (app ws)
 
 app :: WebSocket -> View
 app = Component $ \self ->
@@ -46,3 +48,4 @@ timeDisplay (Just t) =
     [ "Latest time: "
     , toZonedDateTime t
     ]
+

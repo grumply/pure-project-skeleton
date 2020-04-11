@@ -1,14 +1,29 @@
 email: <Email>
-library:
-  source-dirs:
-  - src
 category: Web
 ghc-options: -Wall -fno-warn-unused-do-bind -rtsopts -threaded
 dependencies:
 - base
 - pure
 - pure-websocket
+- base
+- pure
+- pure-websocket
 - shared
+- base
+- pure
+- pure-elm
+- pure-server
+- pure-websocket
+- shared
+- bytestring
+- containers
+- directory
+- filepath
+- pure-test
+- pure-bench
+- frontend
+- shared
+- backend
 default-extensions:
 - AutoDeriveTypeable
 - BangPatterns
@@ -53,14 +68,14 @@ default-extensions:
 - TypeSynonymInstances
 - ViewPatterns
 - TemplateHaskell
-name: frontend
+name: test
 version: 0.1.0.0
-synopsis: frontend client
+synopsis: executable tests
 author: <Author>
 ghcjs-options: -threaded -dedupe -DGHCJS_BROWSER -DGHCJS_GC_INTERVAL=3000000
 license: BSD3
 executables:
-  frontend:
+  test:
     source-dirs:
     - src
     main: Main.hs
