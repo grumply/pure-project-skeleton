@@ -2,7 +2,7 @@
 
 let pure-platform = import (builtins.fetchTarball https://github.com/grumply/pure-platform/tarball/245affcf90d655ca4333b1e05d3e1ad399758381) {};
 
-in pure-platform.project ({ pkgs, ghcjs, ... }: {
+in pure-platform.project ({ pkgs, ... }: {
 
   minimal = true;
 
@@ -11,7 +11,6 @@ in pure-platform.project ({ pkgs, ghcjs, ... }: {
     shared = ./shared;
     frontend = ./frontend;
     server = ./server;
-
     test = ./test;
     dev = ./dev;
   };
