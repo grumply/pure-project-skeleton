@@ -20,7 +20,7 @@ case "$1" in
     echo "-h, --help                show brief help"
     echo "--ghcjs                   continuously build, deploy, and serve using GHCJS"
     echo "--ghc                     continuously build, run, and test using GHC"
-    echo "--lsp                     run HIE, a Haskell language server"
+    echo "_                         run HIE, a Haskell language server"
     exit 0
     ;;
   --ghcjs)
@@ -39,11 +39,8 @@ case "$1" in
     nix-shell default.nix -A shells.ghc --run "cabal new-build dev --enable-optimization=2 --builddir=./dist-newstyle/dev"
     nix-shell default.nix -A shells.ghc --run "$BUILDER --ghc +RTS -N -A128m -RTS"
     ;;
-  --lsp)
-    nix-shell default.nix -A shells.ghc --run "hie --lsp"
-    ;;
   *)
-    break
+    nix-shell default.nix -A shells.ghc --run "hie --lsp"
     ;;
 esac
 
