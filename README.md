@@ -63,7 +63,7 @@ I suggest running `./develop --ghc` and `./develop --ghcjs` in two terminals, an
 
 * In VS Code settings search for `useHieWrapper` and be sure the `Use Custom Hie Wrapper` checkbox is selected and set the `User Custom Hie Wrapper Path` to
   ```bash
-  ${workspaceFolder}/develop --lsp
+  ${workspaceFolder}/develop
   ```
 
 #### nvim
