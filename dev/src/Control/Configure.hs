@@ -16,7 +16,7 @@ configure :: Project -> Compiler -> IO ProcessResult
 configure (project -> p) (projectFile -> pf) = proc
   [i|dhall-to-yaml <<< ./#{p}/config.dhall > ./#{p}/.package.yaml && \
      hpack --force ./#{p}/.package.yaml && \
-     cabal new-configure #{p} --enable-optimization=1 --builddir=./dist-newstyle/#{p} --project-file=#{pf}
+     cabal new-configure #{p} --disable-documentation --enable-optimization=1 --builddir=./dist-newstyle/#{p} --project-file=#{pf}
   |]
 
 config :: Project -> Compiler -> IO ()

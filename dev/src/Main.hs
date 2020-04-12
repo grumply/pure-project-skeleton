@@ -19,7 +19,7 @@ main = do
   withManager $ \mgr -> do
     inject body $ Div <||>
       case compiler os of
-        GHC -> 
+        GHC ->
           [ configurator mgr
           , backend mgr
           , test mgr

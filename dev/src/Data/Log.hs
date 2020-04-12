@@ -6,29 +6,20 @@ import Control.Clear
 import Data.Map as Map
 
 import Prelude hiding (log)
+import Control.Concurrent
 import Data.Foldable
-import Data.IORef
 import Data.List (sortOn)
 import System.IO
 import System.IO.Unsafe
 
 {-# NOINLINE logStatus #-}
-logStatus :: IORef (Map Project Event)
-logStatus = unsafePerformIO $ newIORef mempty
+logStatus :: MVar (Map Project Event)
+logStatus = unsafePerformIO $ newMVar mempty
 
-addLogMessage :: Event -> IO [(Project,Event)]
-addLogMessage ev = 
-  atomicModifyIORef' logStatus $ \ls ->
-    let ls' = Map.insert (eventProject ev) ev ls
-    in (ls',sortOn (eventStatus . snd) (Map.toList ls'))
-
-data Event = Event Project Status 
+data Event = Event Project Status
 
 eventProject :: Event -> Project
 eventProject (Event prj _) = prj
-
-eventStatus :: Event -> Status
-eventStatus (Event _ st) = st
 
 data Status = Bad String (Maybe String) | Running String | Good String
   deriving (Eq,Ord)
@@ -47,12 +38,18 @@ projectStatus :: Project -> Status -> String
 projectStatus prj status = statusEmoji status <> " <" <> project prj <> "> " <> statusMessage status
 
 log :: Event -> IO ()
-log ev = do
-  ms <- addLogMessage ev
-  clear
-  putStrLn $ unlines 
-    [ errors prj m | (_,Event prj (Bad _ (Just m))) <- ms ]
-  traverse_ (write . snd) ms
+log ev =
+  modifyMVar_ logStatus $ \ls -> do
+    let 
+      ls' = Map.insert (eventProject ev) ev ls
+      ms  = sortOn (project . fst) (Map.toList ls')
+    clear
+    hFlush stdout
+    putStrLn $ unlines 
+      [ errors prj m | (_,Event prj (Bad _ (Just m))) <- ms ]
+    hFlush stdout
+    traverse_ (write . snd) ms
+    pure ls'
   where
     errors :: Project -> String -> String
     errors prj = unlines . fmap (("<" <> project prj <> "> ") <>) . lines

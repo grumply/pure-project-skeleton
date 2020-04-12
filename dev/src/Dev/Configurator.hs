@@ -3,9 +3,6 @@ module Dev.Configurator (configurator) where
 
 import Control.Configure
 import Data.Compiler
-import Data.Duration
-import Data.Log
-import Data.Process
 import Data.Project
 
 import Pure.Elm as Elm hiding (Start,Raw,distribute)
@@ -22,7 +19,7 @@ configurator :: WatchManager -> View
 configurator = Elm.run (App [Start] [] [Stop] Nothing update view)
   where
     update Start mgr _mdl = do
-      let 
+      let
         actionable f
           | ".hs"    <- takeExtension f = True
           | ".dhall" <- takeExtension f = True

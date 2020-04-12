@@ -1,7 +1,6 @@
 module Dev.Test (test) where
 
 import Control.Build
-import Control.Configure
 import qualified Control.Run
 import Data.Compiler
 import Data.Duration
@@ -19,7 +18,7 @@ import Data.Foldable
 import Prelude hiding (log)
 import System.FilePath
 
-data Msg = Start | Build | Run String | Died ProcessResult | Stop
+data Msg = Start | Build | Run String | Died String ProcessResult | Stop
 
 data Model = Model
   { watchers :: IO ()
@@ -77,24 +76,29 @@ test = Elm.run (App [Start] [] [Stop] mdl update view)
           let status = "build success (" <> t <> ")"
           command (Run status)
 
-    update (Died pr) _ mdl = do
+    update (Died t pr@(_,out,_)) _ mdl = do
       withProcessResult (pure pr) failure success
       pure mdl { running = Nothing }
       where
-        failure = log . Event Test . Bad "test died" . Just
+        failure _ = 
+          let status = "test died (" <> t <> ")"
+          in log ( Event Test ( Bad status ( Just out ) ) )
 
         success _ = do
-          let status = "test completed successfully"
+          let status = "test completed successfully (" <> t <> ")"
           log ( Event Test (Good status) )
 
-    update (Run status) _ mdl = do
+    update (Run status) _ mdl = withDuration $ \dur -> do
       log ( Event Test (Running "stopping") )
       for_ (running mdl) $ \(tid,p) -> do
         killThread tid
         kill p 
       p <- Control.Run.test
       log ( Event Test (Good status) )
-      tid <- forkIO (await p >>= command . Died)
+      tid <- forkIO $ do
+        pr <- await p 
+        t <- dur 
+        command (Died t pr)
       pure mdl { running = Just (tid,p) }
          
     view _ _ = Null

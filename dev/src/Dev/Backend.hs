@@ -1,7 +1,6 @@
 module Dev.Backend (backend) where
 
 import Control.Build
-import Control.Configure
 import qualified Control.Run
 import Data.Compiler
 import Data.Duration

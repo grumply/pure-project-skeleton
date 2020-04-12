@@ -14,7 +14,6 @@ import Pure.Elm as Elm hiding (Start,Raw,distribute)
 import System.FSNotify
 
 import Control.Concurrent
-import Control.Monad
 import Data.Foldable
 import System.FilePath
 
@@ -43,9 +42,9 @@ frontend = Elm.run (App [Start] [] [Stop] mdl update view)
           | Modified {}      <- ev = command Build
           | otherwise              = pure ()
 
-        watch prj = 
-          watchTree mgr (project prj) 
-            (actionable . takeFileName . eventPath) 
+        watch prj =
+          watchTree mgr (project prj)
+            (actionable . takeFileName . eventPath)
             dispatch
 
       watch Frontend
@@ -61,11 +60,11 @@ frontend = Elm.run (App [Start] [] [Stop] mdl update view)
       for_ (building mdl) killThread
       let status = Running "building"
       log ( Event Frontend status )
-      tid <- forkIO $ 
+      tid <- forkIO $
         withDuration $ \dur ->
           withProcessResult
             (build Frontend GHCJS)
-            failure 
+            failure
             (success dur)
       pure mdl { building = Just tid }
       where
@@ -78,9 +77,6 @@ frontend = Elm.run (App [Start] [] [Stop] mdl update view)
           log ( Event Frontend (Good status) )
           distribute
           pure ()
-
-    update _ _ mdl = 
-      pure mdl
 
     view _ _ = Null
 
