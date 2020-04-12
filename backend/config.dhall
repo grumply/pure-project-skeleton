@@ -18,11 +18,13 @@ in
         ]
     , library =
         { source-dirs = [ "src" ]
+        , other-modules = [] : List Text
         }
     , executables = 
-        { backend = 
+        { backend =
           { source-dirs = [ "src" ]
-          , main = "Main.hs" 
+          , main = "Main.hs"
+          , other-modules = [] : List Text
           } 
         }
     }

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a01aad8510c7c7ee37bf55f604540fea908c883cb4838b00cd7bd00ab2ead148
+-- hash: 937172d4bb02d961490608be789aae3c1f223cd4117d4abe2d787c747f287a0d
 
 name:           test
 version:        0.1.0.0
@@ -17,8 +17,6 @@ build-type:     Simple
 
 executable test
   main-is: Main.hs
-  other-modules:
-      Paths_test
   hs-source-dirs:
       src
   default-extensions: AutoDeriveTypeable BangPatterns ConstraintKinds DataKinds DefaultSignatures DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DoAndIfThenElse EmptyCase EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving ImplicitParams InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PartialTypeSignatures PatternGuards PatternSynonyms PolyKinds RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeFamilyDependencies TypeOperators TypeSynonymInstances ViewPatterns TemplateHaskell

@@ -19,7 +19,8 @@ in
         { test = 
           { source-dirs = [ "src" ] 
           , main = "Main.hs" 
-          } 
+          , other-modules = [] : List Text
+          }
         }
     }
 

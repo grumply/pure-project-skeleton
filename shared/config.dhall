@@ -2,7 +2,6 @@ let shared = ../config.dhall
       { name = "shared"
       , synopsis = "shared types and apis" 
       }
-
 in
   shared //
     { dependencies =
@@ -11,6 +10,7 @@ in
         , "pure-websocket"
         ]
     , library = 
-        { source-dirs = ["src"] 
+        { source-dirs = ["src"]
+        , other-modules = [] : List Text
         }
     }

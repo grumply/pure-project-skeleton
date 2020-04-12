@@ -79,3 +79,4 @@ executables:
     source-dirs:
     - src
     main: Main.hs
+    other-modules: []

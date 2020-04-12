@@ -2,6 +2,7 @@ email: <Email>
 library:
   source-dirs:
   - src
+  other-modules: []
 category: Web
 ghc-options: -Wall -fno-warn-unused-do-bind -rtsopts -threaded
 dependencies:
@@ -70,3 +71,4 @@ executables:
     source-dirs:
     - src
     main: Main.hs
+    other-modules: []
