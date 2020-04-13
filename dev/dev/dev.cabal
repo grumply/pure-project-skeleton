@@ -1,0 +1,38 @@
+cabal-version: 1.12
+
+-- This file has been generated from .package.yaml by hpack version 0.32.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 9f64add6c7ac7354daf5b03375b22719e6f3d763e0a04dd8ef489aed7d44c5dc
+
+name:           dev
+version:        0.1.0.0
+synopsis:       dev environment
+category:       Web
+author:         <Author>
+maintainer:     <Author>
+license:        BSD3
+build-type:     Simple
+
+executable dev
+  main-is: Main.hs
+  other-modules:
+      Dev
+  hs-source-dirs:
+      src
+  default-extensions: AutoDeriveTypeable BangPatterns ConstraintKinds DataKinds DefaultSignatures DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DoAndIfThenElse EmptyCase EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving ImplicitParams InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PartialTypeSignatures PatternGuards PatternSynonyms PolyKinds RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeFamilyDependencies TypeOperators TypeSynonymInstances ViewPatterns TemplateHaskell
+  ghc-options: -Wall -fno-warn-unused-do-bind -rtsopts -threaded
+  ghcjs-options: -threaded -dedupe -DGHCJS_BROWSER -DGHCJS_GC_INTERVAL=3000000
+  build-depends:
+      Glob
+    , base
+    , containers
+    , directory
+    , filepath
+    , fsnotify
+    , process
+    , pure-time
+    , pure-txt
+    , pure-txt-interpolate
+  default-language: Haskell2010

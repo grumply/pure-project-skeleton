@@ -3,7 +3,7 @@ let authorName = "<Author>"
 
 let authorEmail = "<Email>"
 
-let extensions = 
+let extensions =
       [ "AutoDeriveTypeable", "BangPatterns", "ConstraintKinds", "DataKinds"
       , "DefaultSignatures", "DeriveDataTypeable", "DeriveFoldable"
       , "DeriveFunctor", "DeriveGeneric", "DeriveTraversable", "DoAndIfThenElse"
@@ -17,7 +17,7 @@ let extensions =
       , "TupleSections", "TypeApplications", "TypeFamilies"
       , "TypeFamilyDependencies", "TypeOperators", "TypeSynonymInstances"
       , "ViewPatterns", "TemplateHaskell"
-      ] 
+      ]
 
 let PackageConfiguration =
       { name : Text

@@ -7,12 +7,13 @@ in pure-platform.project ({ pkgs, ... }: {
   minimal = true;
 
   packages = {
-    backend = ./backend;
-    shared = ./shared;
-    frontend = ./frontend;
-    server = ./server;
-    test = ./test;
-    dev = ./dev;
+    backend = ./app/backend;
+    shared = ./app/shared;
+    frontend = ./app/frontend;
+    test = ./app/test;
+
+    server = ./dev/server;
+    dev = ./dev/dev;
   };
 
   shells = {

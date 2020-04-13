@@ -2,5 +2,5 @@ compiler: ghcjs
 allow-newer: all
 jobs: $ncpus
 packages:
-  shared/
-  frontend/
+  app/shared/
+  app/frontend/
