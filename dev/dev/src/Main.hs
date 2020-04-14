@@ -11,8 +11,8 @@ import System.Environment
 
 main :: IO ()
 main = getArgs >>= \case
-  ["--ghcjs"] -> defaultMain frontend
-  _           -> defaultMain (backend ++ shared ++ test)
+  ["--ghcjs"] -> defaultMain "app" frontend
+  _           -> defaultMain "app" (backend ++ shared ++ test)
 
 frontend :: [Action]
 frontend = group "frontend"

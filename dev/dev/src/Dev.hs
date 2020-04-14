@@ -107,12 +107,12 @@ infixr 0 |$
       | otherwise              -> Nothing
 
 
-defaultMain :: [Action] -> IO ()
-defaultMain as =
+defaultMain :: FilePath -> [Action] -> IO ()
+defaultMain dir as =
   withManagerConf defaultConfig { confDebounce = Debounce (realToFrac 0.075) } $ \mgr -> do
     actions <- newMVar Map.empty
     cd <- getCurrentDirectory
-    watchTree mgr "." (const True) $ \(mapEventPath (makeRelative cd) -> ev) -> do
+    watchTree mgr dir (const True) $ \(mapEventPath (makeRelative cd) -> ev) -> do
       for_ as $ \(Action interrupt nm f) -> let { ?name = nm; ?file = eventPath ev } in
         let
           start g as = do
