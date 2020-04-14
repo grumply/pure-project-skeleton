@@ -30,14 +30,14 @@ case "$1" in
     nix-shell default.nix -A shells.ghc --run "$SERVER --root ./dist +RTS -N -A32m" &
     clear
     SERVER_PID=$!
-    nix-shell default.nix -A shells.ghcjs --run "$BUILDER --ghcjs +RTS -N -A128m -RTS" &
+    nix-shell default.nix -A shells.ghcjs --run "$BUILDER --ghcjs +RTS -I0 -N -A128m -RTS" &
     BUILDER_PID=$!
     wait $SERVER_PID $BUILDER_PID
     ;;
   --ghc)
     clear
     nix-shell default.nix -A shells.ghc --run "cabal new-build dev --enable-optimization=2 --builddir=./.dist-newstyle/dev"
-    nix-shell default.nix -A shells.ghc --run "$BUILDER +RTS -N -A128m -RTS"
+    nix-shell default.nix -A shells.ghc --run "$BUILDER +RTS -I0 -N -A128m -RTS"
     clear
     ;;
   *)

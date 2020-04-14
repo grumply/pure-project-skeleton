@@ -1,4 +1,3 @@
-
 let authorName = "<Author>"
 
 let authorEmail = "<Email>"
