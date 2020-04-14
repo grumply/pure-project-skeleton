@@ -1,10 +1,6 @@
 {-# language QuasiQuotes, NoMonomorphismRestriction #-}
 module Main where
 
-import Pure.Data.Time
-import Pure.Data.Txt (fromTxt,toTxt)
-import Pure.Data.Txt.Interpolate
-
 import Dev
 
 import System.Environment
@@ -115,6 +111,7 @@ configureProject prj pf = withDuration $ \dur -> do
   pr <- proc
     [i|dhall-to-yaml <<< ./app/#{prj}/config.dhall > ./app/#{prj}/.package.yaml && \
       hpack --force ./app/#{prj}/.package.yaml
+      cabal new-configure #{prj} --disable-documentation --enable-optimization=1 --builddir=./.dist-newstyle/#{prj} --project-file=#{pf}
     |]
   t <- dur
   withProcessResult (pure pr)
@@ -124,7 +121,7 @@ configureProject prj pf = withDuration $ \dur -> do
 buildProject :: Name => String -> String -> IO () -> IO ()
 buildProject prj pf onSuccess = withDuration $ \dur -> do
   status (Running [i|running|])
-  pr <- proc [i|cabal new-build #{prj} --enable-optimization=1 --builddir=./.dist-newstyle/#{prj} --project-file=#{pf}|]
+  pr <- proc [i|cabal new-build #{prj} --builddir=./.dist-newstyle/#{prj} --project-file=#{pf}|]
   t <- dur
   withProcessResult (pure pr)
     (\out err -> message (unlines [err,out]) >> status (Bad  [i|build failure (#{t})|]))

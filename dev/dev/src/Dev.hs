@@ -1,7 +1,7 @@
 {-# language BlockArguments, ImplicitParams #-}
-module Dev (module Dev, module System.FilePath, module System.FilePath.Glob) where
+module Dev (module Dev, module Export, fromTxt, toTxt, i) where
 
-import Pure.Data.Time
+import Pure.Data.Time as Export
 import Pure.Data.Txt
 import Pure.Data.Txt.Interpolate
 
@@ -15,13 +15,13 @@ import Data.Foldable
 import Data.Maybe
 import System.Directory
 import System.Exit
-import System.FilePath
+import System.FilePath as Export
 import System.Process
 import System.IO
 import System.IO.Unsafe
 import Text.Printf
 
-import System.FilePath.Glob
+import System.FilePath.Glob as Export
 
 import Prelude
 
@@ -72,47 +72,47 @@ tracer = traceShow (?name,?file)
 
 infixr 0 |%
 (|%) :: Name => String -> (File => IO ()) -> (Event -> Maybe (IO ()))
-(|%) glob f = let p = compile glob in \ev ->
+(|%) g f = let p = compile g in \ev ->
   case ev of
-    Modified path _ _ | match p path -> Just (let ?file = eventPath ev in f)
+    Modified path _ _ | match p path -> Just (let ?file = path in f)
     _ -> Nothing
 
 infixr 0 |+
 (|+) :: Name => String -> (File => IO ()) -> (Event -> Maybe (IO ()))
-(|+) glob f = let p = compile glob in \ev ->
+(|+) g f = let p = compile g in \ev ->
   case ev of
-    Added path _ _ | match p path -> Just (let ?file = eventPath ev in f)
+    Added path _ _ | match p path -> Just (let ?file = path in f)
     _ -> Nothing
 
 infixr 0 |-
 (|-) :: Name => String -> (File => IO ()) -> (Event -> Maybe (IO ()))
-(|-) glob f = let p = compile glob in \ev ->
+(|-) g f = let p = compile g in \ev ->
   case ev of
-    Removed path _ _ | match p path -> Just (let ?file = eventPath ev in f)
+    Removed path _ _ | match p path -> Just (let ?file = path in f)
     _ -> Nothing
 
 infixr 0 |*
 (|*) :: Name => String -> (File => IO ()) -> (Event -> Maybe (IO ()))
-(|*) glob f = let p = compile glob in \ev ->
+(|*) g f = let p = compile g in \ev ->
   case ev of
-    Removed path _ _ | match p (eventPath ev) -> Just (let ?file = eventPath ev in f)
-    Added   path _ _ | match p (eventPath ev) -> Just (let ?file = eventPath ev in f)
-    _                                         -> Nothing
+    Removed path _ _ | match p path -> Just (let ?file = path in f)
+    Added   path _ _ | match p path -> Just (let ?file = path in f)
+    _                               -> Nothing
 
 infixr 0 |$
 (|$) :: Name => String -> (File => IO ()) -> (Event -> Maybe (IO ()))
-(|$) glob f = let p = compile glob in \ev ->
+(|$) g f = let p = compile g in \ev ->
   case ev of
     _ | match p (eventPath ev) -> Just (let ?file = eventPath ev in f)
       | otherwise              -> Nothing
 
 
 defaultMain :: FilePath -> [Action] -> IO ()
-defaultMain dir as =
-  withManagerConf defaultConfig { confDebounce = Debounce (realToFrac 0.075) } $ \mgr -> do
+defaultMain d as =
+  withManagerConf defaultConfig { confDebounce = Debounce (realToFrac (0.075 :: Double)) } $ \mgr -> do
     actions <- newMVar Map.empty
     cd <- getCurrentDirectory
-    watchTree mgr dir (const True) $ \(mapEventPath (makeRelative cd) -> ev) -> do
+    watchTree mgr d (const True) $ \(mapEventPath (makeRelative cd) -> ev) -> do
       for_ as $ \(Action interrupt nm f) -> let { ?name = nm; ?file = eventPath ev } in
         let
           start g as = do
@@ -196,7 +196,7 @@ spawn :: String -> IO Process
 spawn s = runInteractiveCommand s
 
 kill :: Process -> IO ()
-kill p@(_,_,_,ph) = terminateProcess ph
+kill (_,_,_,ph) = terminateProcess ph
 
 type ProcessResult = (ExitCode, String, String)
 
