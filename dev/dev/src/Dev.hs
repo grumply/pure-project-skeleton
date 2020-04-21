@@ -10,7 +10,9 @@ import System.FSNotify hiding (Action)
 import Data.Map.Strict as Map
 
 import Control.Concurrent
+import Control.Exception hiding (interruptible)
 import Control.Monad
+import Data.Char (isSpace)
 import Data.Foldable
 import Data.Maybe
 import System.Directory
@@ -25,6 +27,7 @@ import System.FilePath.Glob as Export
 
 import Prelude
 
+import GHC.Stack
 import Debug.Trace
 
 type Name = (?name :: String)
@@ -50,7 +53,9 @@ runInterrupt :: Interrupt -> ((File,Name) => IO ())
 runInterrupt (InterruptWith f) = f
 runInterrupt _ = pure ()
 
-data Action = Action Interrupt String (Name => Event -> Maybe (IO ()))
+type Matcher = Name => Event -> Maybe (IO ())
+
+data Action = Action Interrupt String Matcher
 
 group :: String -> [Action] -> [Action]
 group g = fmap (\(Action b nm f) -> Action b (g <> "." <> nm) f)
@@ -66,6 +71,9 @@ pattern Uninterruptible nm f = Action NoInterrupt nm f
 
 first :: [a -> Maybe b] -> (a -> Maybe b)
 first fs = \a -> listToMaybe $ catMaybes $ fs <*> pure a
+
+emptyMatcher :: Matcher
+emptyMatcher = first []
 
 tracer :: (Name, File) => a -> a
 tracer = traceShow (?name,?file)
@@ -107,34 +115,55 @@ infixr 0 |$
       | otherwise              -> Nothing
 
 
-defaultMain :: FilePath -> [Action] -> IO ()
+defaultMain :: HasCallStack => FilePath -> [Action] -> IO ()
 defaultMain d as =
   withManagerConf defaultConfig { confDebounce = Debounce (realToFrac (0.075 :: Double)) } $ \mgr -> do
     actions <- newMVar Map.empty
     cd <- getCurrentDirectory
     watchTree mgr d (const True) $ \(mapEventPath (makeRelative cd) -> ev) -> do
       for_ as $ \(Action interrupt nm f) -> let { ?name = nm; ?file = eventPath ev } in
-        let
-          start g as = do
-            tid <- forkIO (g >> modifyMVar_ actions (continue g))
-            pure (Map.insert nm (tid,False) as)
+        for_ (f ev) $ \g ->
+          let
+            run g =
+              forkIOWithUnmask $ \unmask -> do
+                runInterrupt interrupt
+                unmask $ do
+                  g
+                  unless (interruptible interrupt) $ do
+                    modifyMVar_ actions $ \case
+                      as
+                        | Just (_,Just x) <- Map.lookup nm as -> do
+                          tid <- x
+                          pure (Map.insert nm (tid,Nothing) as)
+                        | Just (_,Nothing) <- Map.lookup nm as -> 
+                          pure as
+                        | otherwise -> 
+                          error "Invariant broken: self no longer exists in actions map"
+                          -- just to make sure this is all right
 
-          stop = pure . Map.delete nm
+          in
+            modifyMVar_ actions $ \case
+              as
+                -- running and interruptible
+                | Just (tid,_) <- Map.lookup nm as
+                , interruptible interrupt -> do
+                  -- will block if the intterupt handler is being 
+                  -- executed within a masked fork in `run`
+                  killThread tid 
+                  tid <- run g 
+                  pure (Map.insert nm (tid,Nothing) as)
 
-          -- run awaiting build or clean up
-          continue g as
-            | Just (_,True) <- Map.lookup nm as = start g as
-            | otherwise                         = stop as
+                -- running and not interruptible
+                | Just (tid,_) <- Map.lookup nm as ->
+                  -- Note: putting `run g` in here instead of `g` because
+                  -- the action needs `(Name,File)` constraint satisfied locally
+                  pure (Map.insert nm (tid,Just $ run g) as)
 
-        in
-          for_ (f ev) $ \g -> do
-            print nm
-            modifyMVar_ actions $ \as ->
-              case Map.lookup nm as of
-                Nothing -> start g as
-                Just (tid,_)
-                  | interruptible interrupt -> killThread tid >> runInterrupt interrupt >> start g as
-                  | otherwise -> pure (Map.insert nm (tid,True) as)
+                -- not running
+                | otherwise -> do
+                  tid <- run g 
+                  pure (Map.insert nm (tid,Nothing) as)
+
     forever (threadDelay 1000000)
 
 mapEventPath :: (FilePath -> FilePath) -> Event -> Event
@@ -183,7 +212,7 @@ message m = do
   modifyMVar_ output $ \(ss,Map.insert ?name msg -> ms) ->
     writeOutput ss ms >> pure (ss,ms)
   where
-    msg = Prelude.unlines $ fmap (("<" <> ?name <> "> ") <>) (Prelude.lines m)
+    msg = Prelude.unlines $ fmap (("<" <> ?name <> "> ") <>) (Prelude.lines $ trim m)
 
 clear :: Name => IO ()
 clear =
@@ -193,25 +222,57 @@ clear =
 type Process = (Handle, Handle, Handle, ProcessHandle)
 
 spawn :: String -> IO Process
-spawn s = runInteractiveCommand s
-
-kill :: Process -> IO ()
-kill (_,_,_,ph) = terminateProcess ph
+spawn s = do
+  (_,Just outh,Just errh,ph) <- createProcess_ "" (shell s)
+    { std_in  = UseHandle stdin
+    , std_out = CreatePipe
+    , std_err = CreatePipe
+    }
+  hSetBuffering outh NoBuffering
+  hSetBuffering errh NoBuffering
+  pure (stdin,outh,errh,ph)
 
 type ProcessResult = (ExitCode, String, String)
 
-await :: Process -> IO ProcessResult
-await (_,outh,errh,ph) = do
-  ec <- waitForProcess ph
-  o <- hGetContents outh
-  e <- hGetContents errh
-  pure (ec,o,e)
+proc :: Name => String -> IO ProcessResult
+proc s = do
+  (_,o,e,ph) <- spawn s
+  ec  <- catch @AsyncException (waitForProcess ph) (\_ -> terminateProcess ph >> waitForProcess ph)
+  out <- hGetContents o
+  err <- hGetContents e
+  Prelude.length out 
+    `seq` Prelude.length err 
+    `seq` cleanupProcess (Nothing,Just o,Just e,ph)
+  case ec of
+    ExitSuccess       -> pure ()
+    ExitFailure (-15) -> pure () -- thread killed
+    ExitFailure f     -> status (Bad (show ec))
+  pure (ec,trim out,trim err)
 
-proc :: String -> IO ProcessResult
-proc = await <=< spawn
-
-proc_ :: String -> IO ()
+proc_ :: Name => String -> IO ()
 proc_ = void . Dev.proc
+
+procPipe :: Name => String -> IO ExitCode
+procPipe s =  do
+  (_,o,e,ph) <- spawn s
+  ec  <- catch @AsyncException (waitForProcess ph) (\_ -> terminateProcess ph >> waitForProcess ph)
+  out <- hGetContents o
+  err <- hGetContents e
+  Prelude.length out 
+    `seq` Prelude.length err 
+    `seq` cleanupProcess (Nothing,Just o,Just e,ph)
+  case ec of
+    ExitSuccess       -> pure ()
+    ExitFailure (-15) -> pure () -- thread killed
+    ExitFailure f     -> status (Bad (show ec))
+  case Prelude.unlines [trim out,trim err] of
+    "" -> pure ec
+    xs -> do
+      message xs 
+      pure ec
+
+procPipe_ :: Name => String -> IO ()
+procPipe_ = void . procPipe
 
 pattern Success :: String -> ProcessResult
 pattern Success s <- (ExitSuccess,s,_)
@@ -237,3 +298,9 @@ withDuration f = do
           | otherwise = show ss <> "." <> printf "%03d" ms <> " seconds"
 
     dur `seq` pure dur
+
+trim :: String -> String
+trim = process . process
+  where
+    process = Prelude.reverse . Prelude.dropWhile isSpace
+
