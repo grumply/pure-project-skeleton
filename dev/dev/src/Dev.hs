@@ -199,7 +199,7 @@ data Status
   | Bad String
 
 status :: Name => Status -> IO ()
-status s = do
+status s =
   modifyMVar_ output $ \(Map.insert ?name (s' s) -> ss,ms) ->
     writeOutput ss ms >> pure (ss,ms)
   where
@@ -208,8 +208,15 @@ status s = do
     s' (Running msg) = '\x1F7E1' : (" <" <> ?name <> "> " <> msg)
 
 message :: Name => String -> IO ()
-message m = do
+message m =
   modifyMVar_ output $ \(ss,Map.insert ?name msg -> ms) ->
+    writeOutput ss ms >> pure (ss,ms)
+  where
+    msg = Prelude.unlines $ fmap (("<" <> ?name <> "> ") <>) (Prelude.lines $ trim m)
+
+appendMessage :: Name => String -> IO ()
+appendMessage m = do
+  modifyMVar_ output $ \(ss,Map.insertWith (flip (++)) ?name msg -> ms) ->
     writeOutput ss ms >> pure (ss,ms)
   where
     msg = Prelude.unlines $ fmap (("<" <> ?name <> "> ") <>) (Prelude.lines $ trim m)
@@ -255,21 +262,25 @@ proc_ = void . Dev.proc
 procPipe :: Name => String -> IO ExitCode
 procPipe s =  do
   (_,o,e,ph) <- spawn s
+  out <- stream ".out" o
+  err <- stream ".err" e
   ec  <- catch @AsyncException (waitForProcess ph) (\_ -> terminateProcess ph >> waitForProcess ph)
-  out <- hGetContents o
-  err <- hGetContents e
-  Prelude.length out 
-    `seq` Prelude.length err 
-    `seq` cleanupProcess (Nothing,Just o,Just e,ph)
+  takeMVar out
+  takeMVar err
+  cleanupProcess (Nothing,Just o,Just e,ph)
   case ec of
-    ExitSuccess       -> pure ()
-    ExitFailure (-15) -> pure () -- thread killed
-    ExitFailure f     -> status (Bad (show ec))
-  case Prelude.unlines [trim out,trim err] of
-    "" -> pure ec
-    xs -> do
-      message xs 
-      pure ec
+    ExitSuccess       -> pure ec
+    ExitFailure (-15) -> pure ec -- thread killed
+    ExitFailure f     -> status (Bad (show ec)) >> pure ec
+  where
+    stream strm h = let nm = ?name in let ?name = nm ++ strm in do
+      barrier <- newEmptyMVar
+      forkIO $ do
+        ms <- hGetContents h
+        for_ (Prelude.lines ms) appendMessage
+        clear
+        putMVar barrier ()
+      pure barrier
 
 procPipe_ :: Name => String -> IO ()
 procPipe_ = void . procPipe
