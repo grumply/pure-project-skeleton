@@ -107,6 +107,7 @@ configure pf = withDuration $ \dur -> do
 
 build :: (Project,Name) => String -> IO () -> IO ()
 build pf onSuccess = withDuration $ \dur -> do
+  clear
   status (Running [i|running build|])
   (ec,out,err) <- proc [i|cabal new-build #{project} --disable-documentation --enable-optimization=1 --builddir=./.dist-newstyle/#{project} --project-file=#{pf}|]
   t <- ec `seq` dur
@@ -130,6 +131,7 @@ distribute = withDuration $ \dur -> do
 
 run :: (Project,Name) => IO ()
 run = withDuration $ \dur -> do
+  clear
   status (Good [i|running #{project}|])
   ec <- procPipe [i|./#{path}|]
   t <- ec `seq` dur
@@ -143,6 +145,7 @@ run = withDuration $ \dur -> do
 
 test :: Name => IO ()
 test = withDuration $ \dur -> do
+  clear
   status (Running [i|running test|])
   ec <- procPipe [i|./#{path}|]
   t <- ec `seq` dur
