@@ -2,14 +2,15 @@ let frontend = ../config.dhall
       { name = "frontend"
       , synopsis = "frontend client" 
       }
+let deps = 
+      [ "base"
+      , "pure"
+      , "pure-websocket"
+      , "shared"
+      ]
 in
   frontend //
-    { dependencies =
-        [ "base"
-        , "pure"
-        , "pure-websocket"
-        , "shared"
-        ]
+    { dependencies = deps
     , library =
         { source-dirs = [ "src" ]
         , other-modules = [] : List Text
@@ -18,8 +19,7 @@ in
         { frontend =
           { source-dirs = [ "src" ]
           , main = "Main.hs"
-          , other-modules = [] : List Text
+          , dependencies = [ "frontend" ] # deps
           } 
         }
     }
-

@@ -4,11 +4,12 @@ module Main where
 import Dev
 
 import System.Environment
+import System.Exit
 
 main :: IO ()
 main = getArgs >>= \case
   ["--ghcjs"] -> defaultMain "app" frontend
-  _           -> defaultMain "app" (backend ++ shared ++ test)
+  _           -> defaultMain "app" (backend ++ shared ++ tests)
 
 frontend :: [Action]
 frontend = withProject "frontend" simpleProjectGHCJS
@@ -21,8 +22,8 @@ backend = withProject "backend" simpleProjectGHC
 shared :: [Action]
 shared = withProject "shared" simpleConfigureOnlyGHC
 
-test :: [Action]
-test = withProject "test" $
+tests :: [Action]
+tests = withProject "test" $
   let
     builder after = first
       [ "app/**/*.cabal" |% (build "cabal.project" after)
@@ -30,7 +31,7 @@ test = withProject "test" $
       ]
         
   in
-    defaultProject configureGHC builder runTest
+    defaultProject configureGHC builder test
 
 --------------------------------------------------------------------------------
 -- Level-4; default compiler-specific project configurations
@@ -92,52 +93,63 @@ defaultProject configure build afterBuild =
 
 configure :: (Project,Name) => String -> IO ()
 configure pf = withDuration $ \dur -> do
-  status (Running [i|running|])
-  pr <- proc
+  status (Running [i|running configure|])
+  (ec,out,err) <- proc
     [i|dhall-to-yaml <<< ./app/#{project}/config.dhall > ./app/#{project}/.package.yaml && \
-      hpack --force ./app/#{project}/.package.yaml
+      hpack --force ./app/#{project}/.package.yaml && \
       cabal new-configure #{project} --disable-documentation --enable-optimization=1 --builddir=./.dist-newstyle/#{project} --project-file=#{pf}
     |]
-  t <- dur
-  withProcessResult (pure pr)
-    (\out err -> message (unlines [err,out]) >> status (Bad  [i|configuration failure (#{t})|]))
-    (\out -> clear                           >> status (Good [i|configured (#{t})|]) )
+  t <- ec `seq` dur
+  case ec of
+    ExitFailure (-15) -> clear
+    ExitFailure _     -> message (Prelude.unlines [out,err]) >> status (Bad [i|configuration failed (#{t})|])
+    ExitSuccess       -> status (Good [i|configuration finished (#{t})|])
 
 build :: (Project,Name) => String -> IO () -> IO ()
 build pf onSuccess = withDuration $ \dur -> do
-  status (Running [i|running|])
-  pr <- proc [i|cabal new-build #{project} --builddir=./.dist-newstyle/#{project} --project-file=#{pf}|]
-  t <- dur
-  withProcessResult (pure pr)
-    (\out err -> message (unlines [err,out]) >> status (Bad  [i|build failure (#{t})|]))
-    (\out -> clear >> status (Good [i|built (#{t})|]) >> onSuccess)
+  status (Running [i|running build|])
+  (ec,out,err) <- proc [i|cabal new-build #{project} --disable-documentation --enable-optimization=1 --builddir=./.dist-newstyle/#{project} --project-file=#{pf}|]
+  t <- ec `seq` dur
+  case ec of
+    ExitFailure (-15) -> clear
+    ExitFailure _     -> message (Prelude.unlines [out,err]) >> status (Bad [i|build failed (#{t})|])
+    ExitSuccess       -> status (Good [i|build finished (#{t})|]) >> onSuccess
 
 distribute :: (Project,Name) => IO ()
 distribute = withDuration $ \dur -> do
-  pr <- proc [i|(rm ./#{path}/index.html || true) && cp ./#{path}/* ./dist/|]
-  t <- dur
-  withProcessResult (pure pr)
-    (\out err -> message (unlines [err,out]) >> status (Bad [i|distribute failure (#{t})|]))
-    (\out -> clear >> status (Good [i|distributed|]))
+  status (Running [i|running distribute|])
+  (ec,out,err) <- proc [i|(rm ./#{path}/index.html || true) && cp ./#{path}/* ./dist/|]
+  t <- ec `seq` dur
+  case ec of
+    ExitFailure (-15) -> clear
+    ExitFailure _     -> message (Prelude.unlines [out,err]) >> status (Bad [i|distribute failed (#{t})|])
+    ExitSuccess       -> status (Good [i|distribute finished (#{t})|])
   where
     path :: String
     path = [i|.dist-newstyle/#{project}/build/*/ghcjs-*/#{project}-*/x/#{project}/build/#{project}/#{project}.jsexe|]
 
 run :: (Project,Name) => IO ()
-run = procPipe_ [i|./#{path}|]
+run = withDuration $ \dur -> do
+  status (Good [i|running #{project}|])
+  ec <- procPipe [i|./#{path}|]
+  t <- ec `seq` dur
+  case ec of
+    ExitFailure (-15) -> clear
+    ExitFailure _     -> status (Bad [i|#{project} died (#{t})|])
+    ExitSuccess       -> status (Good [i|#{project} finished (#{t})|])
   where
     path :: String
     path = [i|.dist-newstyle/#{project}/build/*/ghc-*/#{project}-*/x/#{project}/build/#{project}/#{project}|]
 
-runTest :: Name => IO ()
-runTest = withDuration $ \dur -> do
-  pr <- proc [i|./#{path}|]
-  t <- dur
-  case pr of
-    Success _ -> status $ Good $ "tests successful (" <> t <> ")"
-    Failure out err -> do
-      message (unlines [out,err])
-      status $ Bad $ "test failure (" <> t <> ")"
+test :: Name => IO ()
+test = withDuration $ \dur -> do
+  status (Running [i|running test|])
+  ec <- procPipe [i|./#{path}|]
+  t <- ec `seq` dur
+  case ec of
+    ExitFailure (-15) -> clear
+    ExitFailure _     -> status (Bad [i|tests failed (#{t})|])
+    ExitSuccess       -> clear >> status (Good [i|tests finished (#{t})|])
   where
     path :: String
     path = [i|.dist-newstyle/test/build/*/ghc-8.6.5/test-*/x/test/build/test/test|]

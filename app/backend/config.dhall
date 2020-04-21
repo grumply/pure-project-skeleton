@@ -2,20 +2,21 @@ let backend = ../config.dhall
       { name = "backend"
       , synopsis = "backend server"
       }
+let deps =
+      [ "base"
+      , "pure"
+      , "pure-elm"
+      , "pure-server"
+      , "pure-websocket"
+      , "shared"
+      , "bytestring"
+      , "containers"
+      , "directory"
+      , "filepath"
+      ]
 in
   backend //
-    { dependencies =
-        [ "base"
-        , "pure"
-        , "pure-elm"
-        , "pure-server"
-        , "pure-websocket"
-        , "shared"
-        , "bytestring"
-        , "containers"
-        , "directory"
-        , "filepath"
-        ]
+    { dependencies = deps
     , library =
         { source-dirs = [ "src" ]
         , other-modules = [] : List Text
@@ -24,7 +25,7 @@ in
         { backend =
           { source-dirs = [ "src" ]
           , main = "Main.hs"
-          , other-modules = [] : List Text
+          , dependencies = [ "backend" ] # deps
           } 
         }
     }

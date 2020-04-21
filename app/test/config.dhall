@@ -2,11 +2,8 @@ let test = ../config.dhall
       { name = "test"
       , synopsis = "executable tests"
       }
-
-in
-  test //
-    { dependencies = 
-        (../shared/config.dhall).dependencies 
+let deps = 
+      (../shared/config.dhall).dependencies 
         # (../frontend/config.dhall).dependencies 
         # (../backend/config.dhall).dependencies
         # [ "pure-test"
@@ -15,11 +12,18 @@ in
           , "shared"
           , "backend"
           ]
+in
+  test //
+    { dependencies = deps
+    , library =
+        { source-dirs = [ "src" ]
+        , other-modules = [] : List Text
+        }
     , executables = 
         { test = 
           { source-dirs = [ "src" ] 
           , main = "Main.hs" 
-          , other-modules = [] : List Text
+          , dependencies = [ "test" ] # deps
           }
         }
     }

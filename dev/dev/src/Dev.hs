@@ -250,10 +250,6 @@ proc s = do
   Prelude.length out 
     `seq` Prelude.length err 
     `seq` cleanupProcess (Nothing,Just o,Just e,ph)
-  case ec of
-    ExitSuccess       -> pure ()
-    ExitFailure (-15) -> pure () -- thread killed
-    ExitFailure f     -> status (Bad (show ec))
   pure (ec,trim out,trim err)
 
 proc_ :: Name => String -> IO ()
@@ -268,10 +264,7 @@ procPipe s =  do
   takeMVar out
   takeMVar err
   cleanupProcess (Nothing,Just o,Just e,ph)
-  case ec of
-    ExitSuccess       -> pure ec
-    ExitFailure (-15) -> pure ec -- thread killed
-    ExitFailure f     -> status (Bad (show ec)) >> pure ec
+  pure ec
   where
     stream strm h = let nm = ?name in let ?name = nm ++ strm in do
       barrier <- newEmptyMVar
@@ -289,12 +282,16 @@ pattern Success :: String -> ProcessResult
 pattern Success s <- (ExitSuccess,s,_)
 
 pattern Failure :: String -> String -> ProcessResult
-pattern Failure out err <- (ExitFailure _,out,err)
+pattern Failure out err <- (ExitFailure ((/= 15) -> True),out,err)
 
-withProcessResult :: IO ProcessResult -> (String -> String -> IO a) -> (String -> IO a) -> IO a
-withProcessResult c failure success = c >>= \case
-  Success out     -> success out
+pattern Restarted :: String -> ProcessResult
+pattern Restarted out <- (ExitFailure (-15),out,_)
+
+withProcessResult :: IO ProcessResult -> (String -> String -> IO a) -> (String -> IO a) -> (String -> IO a) -> IO a
+withProcessResult c failure restarted success = c >>= \case
   Failure out err -> failure out err
+  Restarted out   -> restarted out 
+  Success out     -> success out
 
 withDuration :: (IO String -> IO a) -> IO a
 withDuration f = do
@@ -313,5 +310,5 @@ withDuration f = do
 trim :: String -> String
 trim = process . process
   where
-    process = Prelude.reverse . Prelude.dropWhile isSpace
+    process = Prelude.reverse . Prelude.dropWhile (== '\n')
 
