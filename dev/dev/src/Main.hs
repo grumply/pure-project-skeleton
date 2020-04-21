@@ -147,11 +147,11 @@ test :: Name => IO ()
 test = withDuration $ \dur -> do
   clear
   status (Running [i|running test|])
-  ec <- procPipe [i|./#{path}|]
+  (ec,out,err) <- proc [i|./#{path}|]
   t <- ec `seq` dur
   case ec of
     ExitFailure (-15) -> clear
-    ExitFailure _     -> status (Bad [i|tests failed (#{t})|])
+    ExitFailure _     -> message (Prelude.unlines [out,err]) >> status (Bad [i|tests failed (#{t})|])
     ExitSuccess       -> clear >> status (Good [i|tests finished (#{t})|])
   where
     path :: String
