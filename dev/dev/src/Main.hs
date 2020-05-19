@@ -1,4 +1,4 @@
-{-# language QuasiQuotes, NoMonomorphismRestriction, ImplicitParams #-}
+{-# language QuasiQuotes, NoMonomorphismRestriction, ImplicitParams, MultiWayIf, BlockArguments #-}
 module Main where
 
 import Dev
@@ -7,158 +7,186 @@ import System.Environment
 import System.Exit
 
 main :: IO ()
-main = getArgs >>= \case
-  ["--ghcjs"] -> defaultMain "app" frontend
-  _           -> defaultMain "app" (backend ++ shared ++ tests)
+main = getArgs >>= \as -> do
+  let 
+    has = (`elem` as)
+    v = has "--verbose"
+    o = has "--optimize"
 
-frontend :: [Action]
-frontend = withProject "frontend" simpleProjectGHCJS
+  defaultMain "app" $
+    if | has "--ghcjs" -> 
+         app "frontend" "frontend.project" v o frontend
+       | otherwise -> concat
+         [ app "backend" "backend.project" v o backend 
+         , app "test" "test.project" v o test
+         ]
 
-backend :: [Action]
-backend = withProject "backend" simpleProjectGHC
-
--- needed to update the shared.cabal to trigger 
--- other projects to reconfigure/rebuild
-shared :: [Action]
-shared = withProject "shared" simpleConfigureOnlyGHC
-
-tests :: [Action]
-tests = withProject "test" $
-  let
-    builder after = first
-      [ "app/**/*.cabal" |% (build "cabal.project" after)
-      , "app/**/*.hs"    |% (build "cabal.project" after)
-      ]
-        
-  in
-    defaultProject configureGHC builder test
-
---------------------------------------------------------------------------------
--- Level-4; default compiler-specific project configurations
-
-simpleProjectGHC :: Project => [Action]
-simpleProjectGHC = defaultProject configureGHC buildGHC run
-
-simpleProjectGHCJS :: Project => [Action]
-simpleProjectGHCJS = defaultProject configureGHCJS buildGHCJS distribute
-
-simpleConfigureOnlyGHC :: Project => [Action]
-simpleConfigureOnlyGHC = defaultProject configureGHC (\_ -> emptyMatcher) (pure ())
-
-simpleConfigureOnlyGHCJS :: Project => [Action]
-simpleConfigureOnlyGHCJS = defaultProject configureGHCJS (\_ -> emptyMatcher) (pure ())
-
---------------------------------------------------------------------------------
--- Level-3; compiler-specific project configurations
-
-configureGHC :: (Project,Name) => Matcher
-configureGHC = configMatcher (configure "cabal.project")
-
-buildGHC :: (Project,Name) => IO () -> Matcher
-buildGHC = buildMatcher . build "cabal.project"
-
-configureGHCJS :: (Project,Name) => Matcher
-configureGHCJS = configMatcher (configure "cabal-ghcjs.project")
-
-buildGHCJS :: (Project,Name) => IO () -> Matcher
-buildGHCJS = buildMatcher . build "cabal-ghcjs.project"
-
---------------------------------------------------------------------------------
--- Level-2; project primitives
-
-buildMatcher :: Project => (File => IO ()) -> Matcher
-buildMatcher build = first
-  [ "app/shared/shared.cabal"            |% build
-  , [i|app/#{project}/#{project}.cabal|] |% build
-  , [i|app/shared/**/*.hs|]              |% build
-  , [i|app/#{project}/**/*.hs|]          |% build
-  ]
-
-configMatcher :: Project => (File => IO ()) -> Matcher
-configMatcher config = first
-  [ "app/config.dhall"               |% config
-  , [i|app/#{project}/config.dhall|] |% config
-  , [i|app/#{project}/**/*.hs|]      |* config
-  ]
-
-defaultProject :: Project => Matcher -> (IO () -> Matcher) -> (Name => IO ()) -> [Action]
-defaultProject configure build afterBuild = 
-  group project
-    [ Restartable "configure" configure
-    , Restartable "build"     (build afterBuild)
+frontend :: PreApp => [Action]
+frontend = 
+  [ Restartable project $ first
+    [ [i|app/shared/shared.cabal|]     |% full
+    , [i|app/config.dhall|]            |% full
+    , [i|app/frontend/config.dhall|]   |% full
+    , [i|app/frontend/**/*.hs|]        |% partial
+    -- order important
+    , [i|app/frontend/**/*.hs|]        |* full
+    , [i|app/shared/**/*.hs|]          |% partial
     ]
-
---------------------------------------------------------------------------------
--- Level-1; shell commands with status updates
-
-configure :: (Project,Name) => String -> IO ()
-configure pf = withDuration $ \dur -> do
-  status (Running [i|running configure|])
-  (ec,out,err) <- proc
-    [i|dhall-to-yaml <<< ./app/#{project}/config.dhall > ./app/#{project}/.package.yaml && \
-      hpack --force ./app/#{project}/.package.yaml && \
-      cabal new-configure #{project} --disable-documentation --enable-optimization=1 --builddir=./.dist-newstyle/#{project} --project-file=#{pf}
-    |]
-  t <- ec `seq` dur
-  case ec of
-    ExitFailure (-15) -> clear
-    ExitFailure _     -> message (Prelude.unlines [out,err]) >> status (Bad [i|configuration failed (#{t})|])
-    ExitSuccess       -> status (Good [i|configuration finished (#{t})|])
-
-build :: (Project,Name) => String -> IO () -> IO ()
-build pf onSuccess = withDuration $ \dur -> do
-  clear
-  status (Running [i|running build|])
-  (ec,out,err) <- proc [i|cabal new-build #{project} --disable-documentation --enable-optimization=1 --builddir=./.dist-newstyle/#{project} --project-file=#{pf}|]
-  t <- ec `seq` dur
-  case ec of
-    ExitFailure (-15) -> clear
-    ExitFailure _     -> message (Prelude.unlines [out,err]) >> status (Bad [i|build failed (#{t})|])
-    ExitSuccess       -> status (Good [i|build finished (#{t})|]) >> onSuccess
-
-distribute :: (Project,Name) => IO ()
-distribute = withDuration $ \dur -> do
-  status (Running [i|running distribute|])
-  (ec,out,err) <- proc [i|(rm ./#{path}/index.html || true) && cp ./#{path}/* ./dist/|]
-  t <- ec `seq` dur
-  case ec of
-    ExitFailure (-15) -> clear
-    ExitFailure _     -> message (Prelude.unlines [out,err]) >> status (Bad [i|distribute failed (#{t})|])
-    ExitSuccess       -> status (Good [i|distribute finished (#{t})|])
+  ]
   where
-    path :: String
-    path = [i|.dist-newstyle/#{project}/build/*/ghcjs-*/#{project}-*/x/#{project}/build/#{project}/#{project}.jsexe|]
+    full :: App => IO ()
+    full = run $ dhall $ hpack $ configureExe $ buildExe $ distribute
 
-run :: (Project,Name) => IO ()
-run = withDuration $ \dur -> do
-  clear
-  status (Good [i|running #{project}|])
-  ec <- procPipe [i|./#{path}|]
-  t <- ec `seq` dur
-  case ec of
-    ExitFailure (-15) -> clear
-    ExitFailure _     -> status (Bad [i|#{project} died (#{t})|])
-    ExitSuccess       -> status (Good [i|#{project} finished (#{t})|])
+    partial :: App => IO ()
+    partial = run $ buildExe $ distribute
+
+shared :: PreApp => [Action]
+shared = 
+  [ Restartable project $ first
+    [ [i|app/shared/config.dhall|] |% do
+        run $ dhall $ hpack $ configureLib $ done
+    , [i|app/shared/**/*.hs|] |* do
+        run $ dhall $ hpack $ configureLib $ done
+    ]
+  ]
+
+backend :: PreApp => [Action]
+backend =
+  [ Restartable project $ first
+    [ [i|app/shared/shared.cabal|]     |% full
+    , [i|app/backend/config.dhall|]    |% full
+    , [i|app/config.dhall|]            |% full
+    , [i|app/shared/**/*.hs|]          |% partial
+    -- order important
+    , [i|app/backend/**/*.hs|]         |* full
+    , [i|app/backend/**/*.hs|]         |% partial
+    ]
+  ]
   where
-    path :: String
-    path = [i|.dist-newstyle/#{project}/build/*/ghc-*/#{project}-*/x/#{project}/build/#{project}/#{project}|]
+    full :: App => IO ()
+    full = run $ dhall $ hpack $ configureExe $ buildExe $ execute
 
-test :: Name => IO ()
-test = withDuration $ \dur -> do
-  clear
-  status (Running [i|running test|])
-  (ec,out,err) <- proc [i|./#{path}|]
-  t <- ec `seq` dur
-  case ec of
-    ExitFailure (-15) -> clear
-    ExitFailure _     -> message (Prelude.unlines [out,err]) >> status (Bad [i|tests failed (#{t})|])
-    ExitSuccess       -> clear >> status (Good [i|tests finished (#{t})|])
+    partial :: App => IO ()
+    partial = run $ buildExe $ execute
+
+test :: PreApp => [Action]
+test =
+  [ Restartable project $ first
+    [ [i|app/shared/shared.cabal|]     |% full
+    , [i|app/frontend/frontend.cabal|] |% full
+    , [i|app/backend/backend.cabal|]   |% full
+    , [i|app/test/config.dhall|]       |% full
+    , [i|app/config.dhall|]            |% full
+    , [i|app/shared/**/*.hs|]          |% partial
+    -- order important
+    , [i|app/**/*.hs|]                 |* full
+    , [i|app/**/*.hs|]                 |% partial
+    ]
+  ]
   where
-    path :: String
-    path = [i|.dist-newstyle/test/build/*/ghc-8.6.5/test-*/x/test/build/test/test|]
+    full :: App => IO ()
+    full = run $ dhall $ hpack $ configureExe $ buildExe $ execute
 
---------------------------------------------------------------------------------
--- Level-0; configuration
+    partial :: App => IO ()
+    partial = run $ buildExe $ execute
+
+run :: App => IO () -> IO ()
+run x = clear >> status (Running [i|running|]) >> x
+
+verbosity :: App => String
+verbosity
+  | verbose   = "--verbose" 
+  | otherwise = ""
+
+builddir :: App => String
+builddir = [i|--builddir=.dist-newstyle/#{config}/#{project}|]
+
+projectfile :: App => String
+projectfile = [i|--project-file=#{config}|]
+
+optimization :: App => String
+optimization
+  | optimize  = "--enable-optimization=2"
+  | otherwise = "--disable-optimization"
+
+cabal :: App => String -> String -> String
+cabal cmd target = [i|cabal #{cmd} #{target}:#{project} #{optimization} #{builddir} #{projectfile} #{verbosity}|]
+
+jsexe :: App => String
+jsexe | optimize  = [i|.dist-newstyle/#{config}/#{project}/build/*/ghcjs-*/#{project}-*/x/#{project}/opt/build/#{project}/#{project}.jsexe|]
+      | otherwise = [i|.dist-newstyle/#{config}/#{project}/build/*/ghcjs-*/#{project}-*/x/#{project}/noopt/build/#{project}/#{project}.jsexe|]
+
+exe :: App => String
+exe | optimize  = [i|.dist-newstyle/#{config}/#{project}/build/*/ghc-*/#{project}-*/x/#{project}/opt/build/#{project}/#{project}|]
+    | otherwise = [i|.dist-newstyle/#{config}/#{project}/build/*/ghc-*/#{project}-*/x/#{project}/noopt/build/#{project}/#{project}|]
+
+dhall :: App => IO () -> IO ()
+dhall onSuccess = do
+  clear
+  ec <- procPipe [i|dhall-to-yaml <<< ./app/#{project}/config.dhall > ./app/#{project}/.package.yaml|]
+  case ec of
+    ExitFailure _ -> status (Bad [i|dhall configuration failure|])
+    ExitSuccess   -> onSuccess
+
+hpack :: App => IO () -> IO ()
+hpack onSuccess = do
+  clear
+  ec <- procPipe [i|hpack --force ./app/#{project}/.package.yaml|]
+  case ec of
+    ExitFailure _ -> status (Bad [i|hpack failure|])
+    ExitSuccess   -> onSuccess
+
+configureExe :: App => IO () -> IO ()
+configureExe onSuccess = do
+  clear
+  ec <- procPipe (cabal "new-configure" "exe")
+  case ec of
+    ExitFailure _ -> status (Bad [i|build configuration failure|])
+    ExitSuccess   -> onSuccess
+
+configureLib :: App => IO () -> IO ()
+configureLib onSuccess = do
+  clear
+  ec <- procPipe (cabal "new-configure" "lib")
+  case ec of
+    ExitFailure _ -> status (Bad [i|build configuration failure|])
+    ExitSuccess   -> onSuccess
+
+buildExe :: App => IO () -> IO ()
+buildExe onSuccess = do
+  clear
+  ec <- procPipe (cabal "new-build" "exe")
+  case ec of
+    ExitFailure _ -> status (Bad [i|build failure|])
+    ExitSuccess   -> onSuccess
+
+buildLib :: App => IO () -> IO ()
+buildLib onSuccess = do
+  clear
+  ec <- procPipe (cabal "new-build" "lib")
+  case ec of
+    ExitFailure _ -> status (Bad [i|build failure|])
+    ExitSuccess   -> onSuccess
+
+distribute :: App => IO ()
+distribute = do
+  clear
+  ec <- procPipe [i|(rm #{jsexe}/index.html || true) && cp #{jsexe}/* ./dist/|]
+  case ec of
+    ExitFailure _ -> status (Bad [i|distribute failure|])
+    _ -> status (Good [i|success|])
+
+execute :: App => IO ()
+execute = do
+  clear
+  status (Good [i|executingj|])
+  ec <- procPipe [i|./#{exe}|]
+  case ec of
+    ExitFailure _ -> status (Bad [i|executable died|])
+    _ -> status (Good [i|executable exit success|])
+
+done :: App => IO ()
+done = pure ()
 
 type Project = (?project :: String)
 
@@ -168,3 +196,32 @@ withProject prj a = let ?project = prj in a
 project :: Project => String
 project = ?project
 
+type Config = (?config :: String)
+
+withConfig :: String -> (Config => a) -> a
+withConfig cfg a = let ?config = cfg in a
+
+config :: Config => String
+config = ?config
+
+type Verbose = (?verbose :: Bool)
+
+withVerbosity :: Bool -> (Verbose => a) -> a
+withVerbosity v a = let ?verbose = v in a
+
+verbose :: Verbose => Bool
+verbose = ?verbose
+
+type Optimize = (?optimize :: Bool)
+
+withOptimization :: Bool -> (Optimize => a) -> a
+withOptimization o a = let ?optimize = o in a
+
+optimize :: Optimize => Bool
+optimize = ?optimize
+
+type PreApp = (Optimize,Verbose,Project,Config)
+type App = (Name,PreApp)
+
+app :: String -> String -> Bool -> Bool -> (PreApp => a) -> a
+app p c v o a = withProject p $ withConfig c $ withVerbosity v $ withOptimization o a

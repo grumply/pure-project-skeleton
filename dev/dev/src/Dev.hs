@@ -114,32 +114,32 @@ infixr 0 |$
     _ | match p (eventPath ev) -> Just (let ?file = eventPath ev in f)
       | otherwise              -> Nothing
 
-
 defaultMain :: HasCallStack => FilePath -> [Action] -> IO ()
 defaultMain d as =
-  withManagerConf defaultConfig { confDebounce = Debounce (realToFrac (0.075 :: Double)) } $ \mgr -> do
+  withManagerConf defaultConfig { confDebounce = Debounce (realToFrac (0.5 :: Double)) } $ \mgr -> do
     actions <- newMVar Map.empty
     cd <- getCurrentDirectory
-    watchTree mgr d (const True) $ \(mapEventPath (makeRelative cd) -> ev) -> do
+    watchTree mgr d (const True) $ \(mapEventPath (makeRelative cd) -> ev) ->
       for_ as $ \(Action interrupt nm f) -> let { ?name = nm; ?file = eventPath ev } in
         for_ (f ev) $ \g ->
           let
-            run g =
+            run interrupted g =
               forkIOWithUnmask $ \unmask -> do
-                runInterrupt interrupt
+                when interrupted (runInterrupt interrupt)
                 unmask $ do
-                  g
-                  unless (interruptible interrupt) $ do
-                    modifyMVar_ actions $ \case
-                      as
-                        | Just (_,Just x) <- Map.lookup nm as -> do
-                          tid <- x
-                          pure (Map.insert nm (tid,Nothing) as)
-                        | Just (_,Nothing) <- Map.lookup nm as -> 
-                          pure as
-                        | otherwise -> 
-                          error "Invariant broken: self no longer exists in actions map"
-                          -- just to make sure this is all right
+                  mtid <- myThreadId
+                  catch @SomeException g (\_ -> pure ())
+                  modifyMVar_ actions $ \case
+                    as
+                      | Just (_,Just x) <- Map.lookup nm as -> do
+                        tid <- x
+                        pure (Map.insert nm (tid,Nothing) as)
+                      | Just (tid,Nothing) <- Map.lookup nm as
+                      , tid == mtid ->
+                        pure (Map.delete nm as)
+                      | otherwise -> 
+                        error "Invariant broken: self no longer exists in actions map"
+                        -- just to make sure this is all right
 
           in
             modifyMVar_ actions $ \case
@@ -149,19 +149,19 @@ defaultMain d as =
                 , interruptible interrupt -> do
                   -- will block if the intterupt handler is being 
                   -- executed within a masked fork in `run`
+                  message "Killing"
                   killThread tid 
-                  tid <- run g 
-                  pure (Map.insert nm (tid,Nothing) as)
+                  pure (Map.insert nm (tid,Just (run True g)) as)
 
                 -- running and not interruptible
                 | Just (tid,_) <- Map.lookup nm as ->
                   -- Note: putting `run g` in here instead of `g` because
                   -- the action needs `(Name,File)` constraint satisfied locally
-                  pure (Map.insert nm (tid,Just $ run g) as)
+                  pure (Map.insert nm (tid,Just (run False g)) as)
 
                 -- not running
                 | otherwise -> do
-                  tid <- run g 
+                  tid <- run False g 
                   pure (Map.insert nm (tid,Nothing) as)
 
     forever (threadDelay 1000000)
@@ -235,48 +235,27 @@ spawn s = do
     , std_out = CreatePipe
     , std_err = CreatePipe
     }
-  hSetBuffering outh NoBuffering
-  hSetBuffering errh NoBuffering
+  hSetBuffering outh (BlockBuffering Nothing)
+  hSetBuffering errh (BlockBuffering Nothing)
   pure (stdin,outh,errh,ph)
 
 type ProcessResult = (ExitCode, String, String)
 
-proc :: Name => String -> IO ProcessResult
-proc s = do
-  (_,o,e,ph) <- spawn s
-  ec  <- catch @AsyncException (waitForProcess ph) (\_ -> terminateProcess ph >> waitForProcess ph)
-  out <- hGetContents o
-  err <- hGetContents e
-  Prelude.length out 
-    `seq` Prelude.length err 
-    `seq` cleanupProcess (Nothing,Just o,Just e,ph)
-  pure (ec,trim out,trim err)
-
-proc_ :: Name => String -> IO ()
-proc_ = void . Dev.proc
-
 procPipe :: Name => String -> IO ExitCode
-procPipe s =  do
+procPipe s = do
   (_,o,e,ph) <- spawn s
-  out <- stream ".out" o
-  err <- stream ".err" e
+  forkIO $ handle @SomeException (\_ -> pure ()) $ do
+    err <- hGetContents e
+    for_ (Prelude.lines err) appendMessage
+  forkIO $ handle @SomeException (\_ -> pure ()) $ do
+    out <- hGetContents o
+    for_ (Prelude.lines out) appendMessage
   ec  <- catch @AsyncException (waitForProcess ph) (\_ -> terminateProcess ph >> waitForProcess ph)
-  takeMVar out
-  takeMVar err
   cleanupProcess (Nothing,Just o,Just e,ph)
   pure ec
-  where
-    stream strm h = let nm = ?name in let ?name = nm ++ strm in do
-      barrier <- newEmptyMVar
-      forkIO $ do
-        ms <- hGetContents h
-        for_ (Prelude.lines ms) appendMessage
-        clear
-        putMVar barrier ()
-      pure barrier
 
 procPipe_ :: Name => String -> IO ()
-procPipe_ = void . procPipe
+procPipe_ s = void (procPipe s)
 
 pattern Success :: String -> ProcessResult
 pattern Success s <- (ExitSuccess,s,_)
