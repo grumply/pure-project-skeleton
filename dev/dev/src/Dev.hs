@@ -115,7 +115,10 @@ infixr 0 |$
       | otherwise              -> Nothing
 
 defaultMain :: HasCallStack => FilePath -> [Action] -> IO ()
-defaultMain d as =
+defaultMain d as = do
+  hSetBuffering stdout NoBuffering
+  hSetBuffering stderr NoBuffering
+  putStrLn "Watching files."
   withManagerConf defaultConfig { confDebounce = Debounce (realToFrac (0.5 :: Double)) } $ \mgr -> do
     actions <- newMVar Map.empty
     cd <- getCurrentDirectory
@@ -133,10 +136,10 @@ defaultMain d as =
                     as
                       | Just (_,Just x) <- Map.lookup nm as -> do
                         tid <- x
-                        pure (Map.insert nm (tid,Nothing) as)
+                        pure $! Map.insert nm (tid,Nothing) as
                       | Just (tid,Nothing) <- Map.lookup nm as
                       , tid == mtid ->
-                        pure (Map.delete nm as)
+                        pure $! Map.delete nm as
                       | otherwise -> 
                         error "Invariant broken: self no longer exists in actions map"
                         -- just to make sure this is all right
@@ -151,18 +154,18 @@ defaultMain d as =
                   -- executed within a masked fork in `run`
                   message "Killing"
                   killThread tid 
-                  pure (Map.insert nm (tid,Just (run True g)) as)
+                  pure $! Map.insert nm (tid,Just (run True g)) as
 
                 -- running and not interruptible
                 | Just (tid,_) <- Map.lookup nm as ->
                   -- Note: putting `run g` in here instead of `g` because
                   -- the action needs `(Name,File)` constraint satisfied locally
-                  pure (Map.insert nm (tid,Just (run False g)) as)
+                  pure $! Map.insert nm (tid,Just (run False g)) as
 
                 -- not running
                 | otherwise -> do
                   tid <- run False g 
-                  pure (Map.insert nm (tid,Nothing) as)
+                  pure $! Map.insert nm (tid,Nothing) as
 
     forever (threadDelay 1000000)
 
@@ -180,14 +183,14 @@ output = unsafePerformIO (newMVar (Map.empty,Map.empty))
 
 writeOutput :: Map String String -> Map String String -> IO ()
 writeOutput (synopsis -> ss) ms = do
-  putStrLn "\ESC[2J"
   for_ ms putStrLn
   putStrLn ss
   hFlush stdout
 
 synopsis :: Map String String -> String
 synopsis ms
-  | Data.Foldable.all isGood ms = '\x1F7E2' : " all good"
+  | Map.empty ms                = '\x1F7E1' : " running"
+  | Data.Foldable.all isGood ms = "\ESC[2J" ++ ('\x1F7E2' : " all good")
   | otherwise = Prelude.unlines (Map.elems (Map.filter (not . isGood) ms))
   where
     isGood ('\x1F7E2' : _) = True
@@ -200,7 +203,7 @@ data Status
 
 status :: Name => Status -> IO ()
 status s =
-  modifyMVar_ output $ \(Map.insert ?name (s' s) -> ss,ms) ->
+  modifyMVar_ output $ \(Map.insert ?name (s' s) -> !ss,ms) ->
     writeOutput ss ms >> pure (ss,ms)
   where
     s' (Good    msg) = '\x1F7E2' : (" <" <> ?name <> "> " <> msg)
@@ -209,68 +212,56 @@ status s =
 
 message :: Name => String -> IO ()
 message m =
-  modifyMVar_ output $ \(ss,Map.insert ?name msg -> ms) ->
+  modifyMVar_ output $ \(ss,Map.insert ?name msg -> !ms) ->
     writeOutput ss ms >> pure (ss,ms)
   where
-    msg = Prelude.unlines $ fmap (("<" <> ?name <> "> ") <>) (Prelude.lines $ trim m)
+    !msg = Prelude.unlines $ fmap (("<" <> ?name <> "> ") <>) (Prelude.lines $ trim m)
 
 appendMessage :: Name => String -> IO ()
 appendMessage m = do
-  modifyMVar_ output $ \(ss,Map.insertWith (flip (++)) ?name msg -> ms) ->
+  modifyMVar_ output $ \(ss,Map.insertWith (flip (++)) ?name msg -> !ms) ->
     writeOutput ss ms >> pure (ss,ms)
   where
-    msg = Prelude.unlines $ fmap (("<" <> ?name <> "> ") <>) (Prelude.lines $ trim m)
+    !msg = Prelude.unlines $ fmap (("<" <> ?name <> "> ") <>) (Prelude.lines $ trim m)
 
 clear :: Name => IO ()
 clear =
-  modifyMVar_ output $ \(ss,Map.delete ?name -> ms) ->
+  modifyMVar_ output $ \(ss,Map.delete ?name -> !ms) ->
     writeOutput ss ms >> pure (ss,ms)
 
-type Process = (Handle, Handle, Handle, ProcessHandle)
+spawnSilent :: String -> IO ExitCode
+spawnSilent s = do
+  p@(_,_,_,ph) <- createProcess_ "" (shell s)
+    { std_in  = NoStream -- can't prompt for input, anyways
+    , std_out = NoStream
+    , std_err = NoStream
+    }
+  (`finally` (cleanupProcess p)) 
+    (waitForProcess ph)
 
-spawn :: String -> IO Process
+spawn :: String -> IO ExitCode
 spawn s = do
-  (_,Just outh,Just errh,ph) <- createProcess_ "" (shell s)
-    { std_in  = UseHandle stdin
+  p@(_,Just outh,Just errh,ph) <- createProcess_ "" (shell s)
+    { std_in  = NoStream -- this approach is not designed for interactive processes
     , std_out = CreatePipe
     , std_err = CreatePipe
     }
-  hSetBuffering outh (BlockBuffering Nothing)
-  hSetBuffering errh (BlockBuffering Nothing)
-  pure (stdin,outh,errh,ph)
+  (`finally` (cleanupProcess p)) $ do
+    hSetBuffering outh NoBuffering
+    hSetBuffering errh NoBuffering
+    let pipe i o = (`finally` (hClose i)) (hGetContents i >>= hPutStr o)
+    forkIO (pipe outh stdout)
+    forkIO (pipe errh stderr)
+    waitForProcess ph
 
-type ProcessResult = (ExitCode, String, String)
+pattern Success :: ExitCode
+pattern Success <- ExitSuccess
 
-procPipe :: Name => String -> IO ExitCode
-procPipe s = do
-  (_,o,e,ph) <- spawn s
-  forkIO $ handle @SomeException (\_ -> pure ()) $ do
-    err <- hGetContents e
-    for_ (Prelude.lines err) appendMessage
-  forkIO $ handle @SomeException (\_ -> pure ()) $ do
-    out <- hGetContents o
-    for_ (Prelude.lines out) appendMessage
-  ec  <- catch @AsyncException (waitForProcess ph) (\_ -> terminateProcess ph >> waitForProcess ph)
-  cleanupProcess (Nothing,Just o,Just e,ph)
-  pure ec
+pattern Failure :: ExitCode
+pattern Failure <- ExitFailure ((/= 15) -> True)
 
-procPipe_ :: Name => String -> IO ()
-procPipe_ s = void (procPipe s)
-
-pattern Success :: String -> ProcessResult
-pattern Success s <- (ExitSuccess,s,_)
-
-pattern Failure :: String -> String -> ProcessResult
-pattern Failure out err <- (ExitFailure ((/= 15) -> True),out,err)
-
-pattern Restarted :: String -> ProcessResult
-pattern Restarted out <- (ExitFailure (-15),out,_)
-
-withProcessResult :: IO ProcessResult -> (String -> String -> IO a) -> (String -> IO a) -> (String -> IO a) -> IO a
-withProcessResult c failure restarted success = c >>= \case
-  Failure out err -> failure out err
-  Restarted out   -> restarted out 
-  Success out     -> success out
+pattern Restarted :: ExitCode
+pattern Restarted <- ExitFailure (-15)
 
 withDuration :: (IO String -> IO a) -> IO a
 withDuration f = do
@@ -290,4 +281,3 @@ trim :: String -> String
 trim = process . process
   where
     process = Prelude.reverse . Prelude.dropWhile (== '\n')
-

@@ -69,27 +69,6 @@ backend =
     partial :: App => IO ()
     partial = run $ buildExe $ execute
 
-test :: PreApp => [Action]
-test =
-  [ Restartable project $ first
-    [ [i|app/shared/shared.cabal|]     |% full
-    , [i|app/frontend/frontend.cabal|] |% full
-    , [i|app/backend/backend.cabal|]   |% full
-    , [i|app/test/config.dhall|]       |% full
-    , [i|app/config.dhall|]            |% full
-    , [i|app/shared/**/*.hs|]          |% partial
-    -- order important
-    , [i|app/**/*.hs|]                 |* full
-    , [i|app/**/*.hs|]                 |% partial
-    ]
-  ]
-  where
-    full :: App => IO ()
-    full = run $ dhall $ hpack $ configureExe $ buildExe $ execute
-
-    partial :: App => IO ()
-    partial = run $ buildExe $ execute
-
 run :: App => IO () -> IO ()
 run x = clear >> status (Running [i|running|]) >> x
 
@@ -123,7 +102,7 @@ exe | optimize  = [i|.dist-newstyle/#{config}/#{project}/build/*/ghc-*/#{project
 dhall :: App => IO () -> IO ()
 dhall onSuccess = do
   clear
-  ec <- procPipe [i|dhall-to-yaml <<< ./app/#{project}/config.dhall > ./app/#{project}/.package.yaml|]
+  ec <- spawn [i|dhall-to-yaml <<< ./app/#{project}/config.dhall > ./app/#{project}/.package.yaml|]
   case ec of
     ExitFailure _ -> status (Bad [i|dhall configuration failure|])
     ExitSuccess   -> onSuccess
@@ -131,7 +110,7 @@ dhall onSuccess = do
 hpack :: App => IO () -> IO ()
 hpack onSuccess = do
   clear
-  ec <- procPipe [i|hpack --force ./app/#{project}/.package.yaml|]
+  ec <- spawn [i|hpack --force ./app/#{project}/.package.yaml|]
   case ec of
     ExitFailure _ -> status (Bad [i|hpack failure|])
     ExitSuccess   -> onSuccess
@@ -139,7 +118,7 @@ hpack onSuccess = do
 configureExe :: App => IO () -> IO ()
 configureExe onSuccess = do
   clear
-  ec <- procPipe (cabal "new-configure" "exe")
+  ec <- spawn (cabal "new-configure" "exe")
   case ec of
     ExitFailure _ -> status (Bad [i|build configuration failure|])
     ExitSuccess   -> onSuccess
@@ -147,7 +126,7 @@ configureExe onSuccess = do
 configureLib :: App => IO () -> IO ()
 configureLib onSuccess = do
   clear
-  ec <- procPipe (cabal "new-configure" "lib")
+  ec <- spawn (cabal "new-configure" "lib")
   case ec of
     ExitFailure _ -> status (Bad [i|build configuration failure|])
     ExitSuccess   -> onSuccess
@@ -155,7 +134,7 @@ configureLib onSuccess = do
 buildExe :: App => IO () -> IO ()
 buildExe onSuccess = do
   clear
-  ec <- procPipe (cabal "new-build" "exe")
+  ec <- spawn (cabal "new-build" "exe")
   case ec of
     ExitFailure _ -> status (Bad [i|build failure|])
     ExitSuccess   -> onSuccess
@@ -163,7 +142,7 @@ buildExe onSuccess = do
 buildLib :: App => IO () -> IO ()
 buildLib onSuccess = do
   clear
-  ec <- procPipe (cabal "new-build" "lib")
+  ec <- spawn (cabal "new-build" "lib")
   case ec of
     ExitFailure _ -> status (Bad [i|build failure|])
     ExitSuccess   -> onSuccess
@@ -171,7 +150,7 @@ buildLib onSuccess = do
 distribute :: App => IO ()
 distribute = do
   clear
-  ec <- procPipe [i|(rm #{jsexe}/index.html || true) && cp #{jsexe}/* ./dist/|]
+  ec <- spawnSilent [i|(rm #{jsexe}/index.html || true) && cp #{jsexe}/* ./dist/|]
   case ec of
     ExitFailure _ -> status (Bad [i|distribute failure|])
     _ -> status (Good [i|success|])
@@ -180,7 +159,7 @@ execute :: App => IO ()
 execute = do
   clear
   status (Good [i|executingj|])
-  ec <- procPipe [i|./#{exe}|]
+  ec <- spawn [i|./#{exe}|]
   case ec of
     ExitFailure _ -> status (Bad [i|executable died|])
     _ -> status (Good [i|executable exit success|])

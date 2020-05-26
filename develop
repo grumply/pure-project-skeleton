@@ -25,8 +25,8 @@ case "$1" in
     ;;
   --ghcjs)
     trap clean_up_ghcjs SIGHUP SIGINT SIGTERM
-    nix-shell default.nix -A shells.ghc --run "cabal new-build server --enable-optimization=2 --builddir=./.dist-newstyle/server"
-    nix-shell default.nix -A shells.ghc --run "cabal new-build dev --enable-optimization=2 --builddir=./.dist-newstyle/dev"
+    nix-shell default.nix -A shells.ghc --run "cabal new-build server --enable-optimization=2 --builddir=./.dist-newstyle/server --project-file=develop.project --ghc-options=\"-threaded -rtsopts\""
+    nix-shell default.nix -A shells.ghc --run "cabal new-build dev --enable-optimization=2 --builddir=./.dist-newstyle/dev --project-file=develop.project --ghc-options=\"-threaded -rtsopts\""
     nix-shell default.nix -A shells.ghc --run "$SERVER --root ./dist +RTS -N -A32m" &
     clear
     SERVER_PID=$!
@@ -36,7 +36,7 @@ case "$1" in
     ;;
   --ghc)
     clear
-    nix-shell default.nix -A shells.ghc --run "cabal new-build dev --enable-optimization=2 --builddir=./.dist-newstyle/dev"
+    nix-shell default.nix -A shells.ghc --run "cabal new-build dev --enable-optimization=2 --builddir=./.dist-newstyle/dev --project-file=develop.project --ghc-options=\"-threaded -rtsopts\""
     nix-shell default.nix -A shells.ghc --run "$BUILDER +RTS -I0 -N -A128m -RTS"
     clear
     ;;
