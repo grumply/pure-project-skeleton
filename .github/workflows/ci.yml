@@ -20,8 +20,4 @@ jobs:
     - uses: cachix/cachix-action@v5
       with:
         name: purehs
-
-    - name: build
-      run: |
-        nix-build -o result -A ghcjs.frontend
-        nix-build -o result -A ghc.backend
+        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
