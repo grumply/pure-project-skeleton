@@ -8,7 +8,7 @@ mkMessage "SayHello" [t|()|]
 
 mkRequest "AskTime" [t|() -> Time|]
 
-backendAPI :: FullAPI '[SayHello] '[AskTime]
+backendAPI :: API '[SayHello] '[AskTime]
 backendAPI = api msgs reqs
   where
     msgs = sayHello <:> WS.none

@@ -32,8 +32,8 @@ conn = Component $ \self -> def
 
 backendImpl :: ( msgs ~ '[SayHello]
                , reqs ~ '[AskTime]
-               ) => Implementation msgs reqs msgs reqs
-backendImpl = Impl backendAPI msgs reqs
+               ) => Endpoints msgs reqs msgs reqs
+backendImpl = Endpoints backendAPI msgs reqs
   where
     msgs = handleSayHello <:> WS.none
     reqs = handleAskTime <:> WS.none
