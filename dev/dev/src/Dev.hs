@@ -189,7 +189,7 @@ writeOutput (synopsis -> ss) ms = do
 
 synopsis :: Map String String -> String
 synopsis ms
-  | Map.empty ms                = '\x1F7E1' : " running"
+  | Map.null ms                 = '\x1F7E1' : " running"
   | Data.Foldable.all isGood ms = "\ESC[2J" ++ ('\x1F7E2' : " all good")
   | otherwise = Prelude.unlines (Map.elems (Map.filter (not . isGood) ms))
   where
