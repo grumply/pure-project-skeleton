@@ -18,6 +18,7 @@ main = getArgs >>= \as -> do
          app "frontend" "frontend.project" v o frontend
        | otherwise -> concat
          [ app "backend" "backend.project" v o backend 
+         , app "shared"  "backend.project" v o shared
          ]
 
 frontend :: PreApp => [Action]
