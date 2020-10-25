@@ -1,21 +1,12 @@
 email: <Email>
-library:
-  source-dirs:
-  - src
-  other-modules: []
 category: Web
 ghc-options: -Wall -fno-warn-unused-do-bind -rtsopts -threaded
 dependencies:
 - base
-- pure
 - pure-elm
 - pure-server
 - pure-websocket
 - shared
-- bytestring
-- containers
-- directory
-- filepath
 default-extensions:
 - AutoDeriveTypeable
 - BangPatterns
@@ -60,6 +51,10 @@ default-extensions:
 - TypeSynonymInstances
 - ViewPatterns
 - TemplateHaskell
+- BlockArguments
+- PostfixOperators
+- DerivingVia
+- DerivingStrategies
 name: backend
 version: 0.1.0.0
 synopsis: backend server
@@ -71,4 +66,9 @@ executables:
     source-dirs:
     - src
     main: Main.hs
-    other-modules: []
+    dependencies:
+    - base
+    - pure-elm
+    - pure-server
+    - pure-websocket
+    - shared

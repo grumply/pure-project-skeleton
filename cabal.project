@@ -5,6 +5,5 @@ packages:
   app/shared/
   app/backend/
   app/frontend/
-  app/test/
   dev/dev/
   dev/server/

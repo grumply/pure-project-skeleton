@@ -1,13 +1,9 @@
 email: <Email>
-library:
-  source-dirs:
-  - src
-  other-modules: []
 category: Web
 ghc-options: -Wall -fno-warn-unused-do-bind -rtsopts -threaded
 dependencies:
 - base
-- pure
+- pure-elm
 - pure-websocket
 - shared
 default-extensions:
@@ -54,6 +50,10 @@ default-extensions:
 - TypeSynonymInstances
 - ViewPatterns
 - TemplateHaskell
+- BlockArguments
+- PostfixOperators
+- DerivingVia
+- DerivingStrategies
 name: frontend
 version: 0.1.0.0
 synopsis: frontend client
@@ -65,4 +65,8 @@ executables:
     source-dirs:
     - src
     main: Main.hs
-    other-modules: []
+    dependencies:
+    - base
+    - pure-elm
+    - pure-websocket
+    - shared

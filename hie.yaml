@@ -4,8 +4,6 @@ cradle:
       component: "lib:frontend"
     - path: ./app/backend
       component: "lib:backend"
-    - path: ./app/test
-      component: "lib:test"
     - path: ./app/shared
       component: "lib:shared"
     - path: ./dev/server

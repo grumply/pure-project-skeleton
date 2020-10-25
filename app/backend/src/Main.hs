@@ -1,45 +1,17 @@
 module Main where
 
-import Pure
-import Pure.Server
-import Pure.WebSocket as WS
-
-import Shared
+import Pure.Elm
+import Server
 
 import Control.Monad
-import System.IO
 
 main :: IO ()
-main = inject body (server ()) >> hSetBuffering stdout NoBuffering >> sleep
+main = inject body (server config) >> keepalive
   where
-    sleep = forever (delay (Seconds 60 0))
-
-server :: () -> View
-server = Component $ \_self -> def
-    { construct = return ()
-    , render    = \_ _ -> Server "127.0.0.1" 8081 conn
-    }
-
-conn :: WebSocket -> View
-conn = Component $ \self -> def
-  { construct = return ()
-  , executing = \st -> do
-      ws <- ask self
-      enact ws backendImpl
-      activate ws
-      pure st
-  }
-
-backendImpl :: ( msgs ~ '[SayHello]
-               , reqs ~ '[AskTime]
-               ) => Endpoints msgs reqs msgs reqs
-backendImpl = Endpoints backendAPI msgs reqs
-  where
-    msgs = handleSayHello <:> WS.none
-    reqs = handleAskTime <:> WS.none
-
-handleSayHello :: MessageHandler SayHello
-handleSayHello = awaiting $ liftIO (putStrLn "Hello!")
-
-handleAskTime :: RequestHandler AskTime
-handleAskTime = responding (liftIO time >>= reply)
+    config = Config
+      { host = "127.0.0.1",
+        port = 8081
+      }
+      
+    keepalive = forever do
+      delay Minute

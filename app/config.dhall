@@ -15,7 +15,8 @@ let extensions =
       , "RecordWildCards", "ScopedTypeVariables", "StandaloneDeriving"
       , "TupleSections", "TypeApplications", "TypeFamilies"
       , "TypeFamilyDependencies", "TypeOperators", "TypeSynonymInstances"
-      , "ViewPatterns", "TemplateHaskell"
+      , "ViewPatterns", "TemplateHaskell", "BlockArguments", "PostfixOperators"
+      , "DerivingVia", "DerivingStrategies"
       ]
 
 let PackageConfiguration =

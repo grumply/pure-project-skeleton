@@ -4,22 +4,18 @@ let frontend = ../config.dhall
       }
 let deps = 
       [ "base"
-      , "pure"
+      , "pure-elm"
       , "pure-websocket"
       , "shared"
       ]
 in
   frontend //
     { dependencies = deps
-    , library =
-        { source-dirs = [ "src" ]
-        , other-modules = [] : List Text
-        }
     , executables =
         { frontend =
           { source-dirs = [ "src" ]
           , main = "Main.hs"
-          , dependencies = [ "frontend" ] # deps
+          , dependencies = deps
           } 
         }
     }
