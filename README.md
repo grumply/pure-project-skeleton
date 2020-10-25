@@ -49,12 +49,12 @@ I suggest running `./develop --ghc` and `./develop --ghcjs` in two terminals, an
 
 * Tell `cachix` to use the `all-hies` build cache.
   ```bash
-  cachix use all-hies
+  $ cachix use all-hies
   ```
 
 * Install the ghc 8.6.5 hie to match pure-platform's ghc version.
   ```bash
-  nix-env -iA selection --arg selector 'p: { inherit (p) ghc865; }' -f https://github.com/infinisil/all-hies/tarball/master
+  $ nix-env -iA selection --arg selector 'p: { inherit (p) ghc865; }' -f https://github.com/infinisil/all-hies/tarball/master
   ```
 
 #### VS Code
@@ -79,7 +79,7 @@ $ nix-shell default.nix -A shells.ghc
 [ghcid](https://github.com/ndmitchell/ghcid) integration is also available, but has fewer features than `hie`.
 
 ```bash
-nix-shell default.nix -A shells.ghc --run "ghcid -c \"cabal new-repl $project\""
+$ nix-shell default.nix -A shells.ghc --run "ghcid -c \"cabal new-repl $project\""
 ```
 
 where `$project` can be any of `frontend`, `backend`, or `shared`.
