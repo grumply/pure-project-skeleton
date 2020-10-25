@@ -41,22 +41,6 @@ $ ./develop --ghcjs
 
 I suggest running `./develop --ghc` and `./develop --ghcjs` in two terminals, and allowing your editor to run `HIE`.
 
-#### Haskell IDE Engine (hie)
-
-[hie](https://github.com/haskell/haskell-ide-engine) is a full-featured Haskell IDE with [hlint](https://github.com/ndmitchell/hlint) integration, quick actions and refactoring, haddock documentation and type on hover, jump to definition, completions, formatting, and more.
-
-* Be sure you followed the steps at [purehs.cachix.org](https://purehs.cachix.org) to enable cached builds as directed in [First run](#first-run)
-
-* Tell `cachix` to use the `all-hies` build cache.
-  ```bash
-  $ cachix use all-hies
-  ```
-
-* Install the ghc 8.6.5 hie to match pure-platform's ghc version.
-  ```bash
-  $ nix-env -iA selection --arg selector 'p: { inherit (p) ghc865; }' -f https://github.com/infinisil/all-hies/tarball/master
-  ```
-
 #### VS Code
 
 * Install [Haskell Language Server for VS Code](https://marketplace.visualstudio.com/items?itemName=alanz.vscode-hie-server).
@@ -69,6 +53,16 @@ $ nix-shell default.nix -A shells.ghc
 ```
 
 #### nvim
+
+* Tell `cachix` to use the `all-hies` build cache.
+  ```bash
+  $ cachix use all-hies
+  ```
+
+* Install the ghc 8.6.5 hie to match pure-platform's ghc version.
+  ```bash
+  $ nix-env -iA selection --arg selector 'p: { inherit (p) ghc865; }' -f https://github.com/infinisil/all-hies/tarball/master
+  ```
 
 * Install [coc.nvim](https://github.com/neoclide/coc.nvim).
 
