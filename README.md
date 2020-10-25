@@ -61,10 +61,12 @@ I suggest running `./develop --ghc` and `./develop --ghcjs` in two terminals, an
 
 * Install [Haskell Language Server for VS Code](https://marketplace.visualstudio.com/items?itemName=alanz.vscode-hie-server).
 
-* In VS Code settings search for `useHieWrapper` and be sure the `Use Custom Hie Wrapper` checkbox is selected and set the `User Custom Hie Wrapper Path` to
-  ```bash
-  ${workspaceFolder}/develop
-  ```
+VS Code must be launched from a shell with access to the necessary libraries, etc...
+
+```bash
+$ nix-shell default.nix -A shells.ghc
+[nix-shell:pure-project-skeleton]$ code .
+```
 
 #### nvim
 
@@ -76,13 +78,11 @@ I suggest running `./develop --ghc` and `./develop --ghcjs` in two terminals, an
 
 [ghcid](https://github.com/ndmitchell/ghcid) integration is also available, but has fewer features than `hie`.
 
-Run `ghcid`
-
 ```bash
 nix-shell default.nix -A shells.ghc --run "ghcid -c \"cabal new-repl $project\""
 ```
 
-where `$project` can be any of `frontend`, `backend`, `shared`, or `test`
+where `$project` can be any of `frontend`, `backend`, or `shared`.
 
 ## Production
 
@@ -118,6 +118,28 @@ Nix can be used for creating deterministic, production-ready build products. You
 
   ```bash
   $ nix-build -o frontend-result -A ghcjs.frontend
+  ```
+- Minimize the frontend
+
+  ```bash
+  $ closure-compiler --compilation_level ADVANCED_OPTIMIZATIONS --jscomp_off="*" --js frontend-result/bin/frontend.jsexe/all.js --js_output_file dist/all.js
+  ```
+  
+  After minimization, the payload is reduced to 30% of the original.
+
+  ```bash
+  $ ls -lh frontend-result/bin/frontend.jsexe/all.js
+  2.1M ... frontend-result/bin/frontend.jsexe/all.js
+  $ ls -lh dist/all.js
+  611K ... dist/all.js
+  ```
+
+  The style of code produced by GHCJS is quite well compressed. When served with gzip, the payload is reduced to 8% of the original.
+
+  ```bash 
+  $ gzip < dist/all.js > dist/all.js.gz
+  $ ls -lh dist/all.gz
+  167K ... dist/all.js.gz
   ```
 
 ## License
@@ -159,5 +181,5 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ## Thanks
 
-Thanks to [Will Fancher](https://github.com/elvishjerricco) for [reflex-project-skeleton](https://github.com/elvishjerricco/reflex-project-skeleton) on which this project is based.
+Thanks to [Will Fancher](https://github.com/elvishjerricco) for [reflex-project-skeleton](https://github.com/elvishjerricco/reflex-project-skeleton) on which this project was originally based.
 

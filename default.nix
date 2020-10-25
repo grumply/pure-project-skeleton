@@ -10,14 +10,13 @@ in pure-platform.project ({ pkgs, ... }: {
     backend = ./app/backend;
     shared = ./app/shared;
     frontend = ./app/frontend;
-    test = ./app/test;
 
     server = ./dev/server;
     dev = ./dev/dev;
   };
 
   shells = {
-    ghc = [ "dev" "server" "backend" "shared" "frontend" "test" ];
+    ghc = [ "dev" "server" "backend" "shared" "frontend" ];
     ghcjs = [ "shared" "frontend" ];
   };
 
