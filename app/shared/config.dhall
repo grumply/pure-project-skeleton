@@ -7,6 +7,7 @@ in
     { dependencies =
         [ "base"
         , "pure"
+        , "pure-json"
         , "pure-websocket"
         ]
     , library = 

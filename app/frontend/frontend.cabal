@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 134c836d1e0784c4a55262737bf653c05f85c4894f549dc4a9e1b949d6dbef48
+-- hash: 1ec610a3064e21c39a6a893cbf9cec9a20a01ec0861baff84849cec14c0406a4
 
 name:           frontend
 version:        0.1.0.0
@@ -19,6 +19,7 @@ build-type:     Simple
 executable frontend
   main-is: Main.hs
   other-modules:
+      App
       Paths_frontend
   hs-source-dirs:
       src

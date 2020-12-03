@@ -2,6 +2,7 @@ let backend = ../config.dhall
       { name = "backend"
       , synopsis = "backend server"
       }
+
 let deps =
       [ "base"
       , "pure-elm"
@@ -9,6 +10,7 @@ let deps =
       , "pure-websocket"
       , "shared"
       ]
+
 in
   backend //
     { dependencies = deps

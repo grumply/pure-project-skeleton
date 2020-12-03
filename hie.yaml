@@ -1,9 +1,9 @@
 cradle:
   cabal:
     - path: ./app/frontend
-      component: "lib:frontend"
+      component: "exe:frontend"
     - path: ./app/backend
-      component: "lib:backend"
+      component: "exe:backend"
     - path: ./app/shared
       component: "lib:shared"
     - path: ./dev/server
