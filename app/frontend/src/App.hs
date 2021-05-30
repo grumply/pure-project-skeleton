@@ -17,7 +17,7 @@ data Message
   = SetServerTime Time
 
 app :: Config -> View
-app = run (App [] [] [] model update view)
+app = run (App [] [] [] (pure model) update view)
   where
     model = Model Nothing
 

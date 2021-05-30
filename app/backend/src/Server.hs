@@ -15,7 +15,7 @@ data Model = Model
 data Message = Startup
 
 server :: Config -> View
-server = run (App [Startup] [] [] model update view) 
+server = run (App [Startup] [] [] (pure model) update view) 
   where
     model = Model
 
