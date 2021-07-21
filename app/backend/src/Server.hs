@@ -1,27 +1,25 @@
-module Server (server,Config(..)) where
+module Server (Server(..)) where
 
-import Pure.Elm
-import qualified Pure.Server as Server
+import Pure.Elm.Component hiding (Start,start)
+import qualified Pure.Server as Pure
 
-import qualified Connection 
+import Connection 
 
-data Config = Config
+data Server = Server
   { host :: String, 
     port :: Int
   }
 
-data Model = Model
+instance Component Server where
+  data Msg Server = Start
 
-data Message = Startup
+  startup = [Start]
 
-server :: Config -> View
-server = run (App [Startup] [] [] (pure model) update view) 
-  where
-    model = Model
+  upon = \case
+    Start -> start
 
-    update Startup _ mdl = pure mdl
+  view Server { host, port } _ = 
+    Pure.Server host port (run . Connection)
 
-    view config _ = 
-      Server.Server (host config) (port config) 
-        (Connection.connection . Connection.Config)
-
+start :: Update Server
+start _ mdl = pure mdl

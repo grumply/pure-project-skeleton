@@ -1,31 +1,28 @@
-module Connection (connection,Config(..)) where
+module Connection (Connection(..)) where
 
-import Pure.Elm
+import Pure.Elm.Component hiding (Start,start)
 import Pure.WebSocket as WS
 
 import System.IO
 
 import Shared
 
-data Config = Config
+data Connection = Connection
   { socket :: WebSocket }
 
-data Model = Model 
+instance Component Connection where
+  data Msg Connection = Start
 
-data Message = Startup
+  startup = [Start]
 
-connection :: Config -> View
-connection = run (App [Startup] [] [] (pure model) update view)
-  where
-    model = Model
+  upon = \case
+    Start -> start
 
-    update Startup config model = do
-      let ws = socket config
-      enact ws backendImpl
-      activate ws 
-      pure model
-
-    view config model = Null
+start :: Update Connection
+start Connection { socket } mdl = do
+  enact socket backendImpl
+  activate socket 
+  pure mdl
 
 backendImpl :: Endpoints _ _ _ _
 backendImpl = Endpoints backendAPI msgs reqs

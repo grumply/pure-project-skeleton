@@ -1,14 +1,14 @@
 module Main where
 
-import Pure.Elm
+import Pure.Elm.Component
 import Server
 
 import Control.Monad
 
 main :: IO ()
-main = inject body (server config) >> keepalive
+main = inject body (run server) >> keepalive
   where
-    config = Config
+    server = Server
       { host = "127.0.0.1",
         port = 8081
       }
