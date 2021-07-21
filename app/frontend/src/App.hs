@@ -1,59 +1,39 @@
-module App (app,Config(..)) where
+module App (App(..)) where
 
-import Pure.Elm hiding (time)
-import Pure.WebSocket as WS
+import Components.Hello
+import Components.Home
+import Components.Time
+
+import Pure.Elm.Application hiding (Time,run)
+import Pure.Elm.Component (run)
+import Pure.WebSocket
 
 import Shared
 
-data Config = Config
+data App = App
   { socket :: WebSocket
   }
 
-data Model = Model
-  { serverTime :: Maybe Time
-  }
+instance Application App where
+  data Route App = HomeR | TimeR | HelloR
+    
+  home = HomeR
 
-data Message 
-  = SetServerTime Time
+  location = \case
+    HomeR  -> "/"
+    TimeR  -> "/time"
+    HelloR -> "/hello"
 
-app :: Config -> View
-app = run (App [] [] [] (pure model) update view)
-  where
-    model = Model Nothing
+  routes = do
+    path "/hello" do
+      dispatch HelloR
+    
+    path "/time" do
+      dispatch TimeR
 
-    update (SetServerTime t) _ m = 
-      pure m { serverTime = Just t }
+    dispatch HomeR
 
-    view config model = 
-      let
-        msg = message backendAPI (socket config)
-        req = request backendAPI (socket config)
-      in 
-        Div <||>
-          [ let 
-              hello = msg sayHello ()
-            in 
-              messageExample hello
-
-          , let 
-              getServerTime = req askTime () (command . SetServerTime)
-            in 
-              requestExample model getServerTime
-          ]
-
-messageExample :: IO () -> View
-messageExample hello =
-  Button <| OnClick (const hello) |> [ "Say Hello" ]
-
-requestExample :: Model -> IO () -> View
-requestExample model getServerTime = 
-  Div <||>
-    [ Button <| OnClick (const getServerTime) |> [ "Get Time" ]
-    , maybe Null zonedTime (serverTime model) 
-    ]
-  where
-    zonedTime t = 
-      Div <||>
-        [ "Server time: "
-        , toZonedDateTime t
-        ]
+  view rt App { socket } _ = case rt of
+    HomeR  -> run Home
+    HelloR -> run (Hello socket)
+    TimeR  -> run (Time socket)

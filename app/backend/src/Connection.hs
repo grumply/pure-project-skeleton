@@ -35,8 +35,9 @@ backendImpl = Endpoints backendAPI msgs reqs
 
 handleSayHello :: MessageHandler SayHello
 handleSayHello = awaiting do
+  nm <- acquire
   liftIO do
-    putStrLn "Hello!"
+    putStrLn ("Hello from: " <> fromTxt nm)
     hFlush stdout
 
 handleAskTime :: RequestHandler AskTime

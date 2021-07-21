@@ -4,7 +4,7 @@ module Shared where
 import Pure
 import Pure.WebSocket as WS
 
-mkMessage "SayHello" [t|()|]
+mkMessage "SayHello" [t|Txt|]
 
 mkRequest "AskTime" [t|() -> Time|]
 
