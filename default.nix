@@ -13,6 +13,10 @@ in pure-platform.project ({ pkgs, ... }: {
 
     server = ./dev/server;
     dev = ./dev/dev;
+
+  };
+
+  overrides = self: super: {
   };
 
   shells = {
