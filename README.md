@@ -123,17 +123,17 @@ Nix can be used for creating deterministic, production-ready build products. You
 
   ```bash
   $ ls -lh frontend-result/bin/frontend.jsexe/all.js
-  2.1M ... frontend-result/bin/frontend.jsexe/all.js
+  2.3M ... frontend-result/bin/frontend.jsexe/all.js
   $ ls -lh dist/all.js
-  611K ... dist/all.js
+  681K ... dist/all.js
   ```
 
   The style of code produced by GHCJS is quite well compressed. When served with gzip, the payload is reduced to 8% of the original.
 
   ```bash 
   $ gzip < dist/all.js > dist/all.js.gz
-  $ ls -lh dist/all.gz
-  167K ... dist/all.js.gz
+  $ ls -lh dist/all.js.gz
+  190K ... dist/all.js.gz
   ```
 
 ## License
@@ -141,7 +141,7 @@ Nix can be used for creating deterministic, production-ready build products. You
 The `LICENSE` files in this project exist only as demonstrative templates. You have the right to modify those files in any way that is compatible with the following BSD-3 license for this project.
 
 ```LICENSE
-Copyright (c) 2020, Sean Hickman
+Copyright (c) 2021, Sean Hickman
 
 All rights reserved.
 

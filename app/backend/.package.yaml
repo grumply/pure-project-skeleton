@@ -1,6 +1,6 @@
 email: <Email>
 category: Web
-ghc-options: -Wall -fno-warn-unused-do-bind -rtsopts -threaded
+ghc-options: -O2 -Wall -fno-warn-missing-methods -fno-warn-unused-do-bind -rtsopts -threaded
 dependencies:
 - base
 - pure-elm

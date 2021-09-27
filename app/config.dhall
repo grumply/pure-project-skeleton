@@ -32,7 +32,7 @@ let package = \(pkg : PackageConfiguration) ->
       , author = authorName
       , email = authorEmail
       , license = "BSD3"
-      , ghc-options = "-Wall -fno-warn-unused-do-bind -rtsopts -threaded"
+      , ghc-options = "-O2 -Wall -fno-warn-missing-methods -fno-warn-unused-do-bind -rtsopts -threaded"
       , ghcjs-options = "-threaded -dedupe -DGHCJS_BROWSER -DGHCJS_GC_INTERVAL=3000000"
       , default-extensions = extensions
       }
