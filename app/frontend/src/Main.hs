@@ -8,4 +8,4 @@ import App
 main :: IO ()
 main = do
   ws <- clientWS "127.0.0.1" 8081
-  inject body (run (App ws))
+  inject body (execute (App ws))
