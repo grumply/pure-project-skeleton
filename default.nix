@@ -1,6 +1,6 @@
 { nixpkgs ? import <nixpkgs> {} }:
 
-let pure-platform = import (builtins.fetchTarball https://github.com/grumply/pure-platform/tarball/f70da9c37cc0ed793697a1a021d4c018e828efa1) {};
+let pure-platform = import (builtins.fetchTarball https://github.com/grumply/pure-platform/tarball/90e69c3de91893df149c702b006c6e48d4b3eb8c) {};
 
 in pure-platform.project ({ pkgs, ... }: {
 
